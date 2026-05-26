@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>隔离器售前文档生成系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #1e3a5f;
+      --primary-light: #2a4f80;
+      --accent-gold: #c9a227;
+      --accent-green: #2e7d55;
+      --bg-light: #f4f7fc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+      background: var(--bg-light);
+      color: #1a2233;
+    }
+    #app-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2a4f80 60%, #1a6b55 100%);
+    }
+    #app-header .header-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 28px;
+    }
+    #app-header .logo-wrap { display: flex; align-items: center; gap: 12px; }
+    #app-header .logo-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    #app-header h1 { color: #fff; font-size: 1.35rem; font-weight: 700; }
+    #app-header .subtitle { color: rgba(255,255,255,0.7); font-size: 0.75rem; margin-top: 1px; }
+    #app-header .header-right { color: rgba(255,255,255,0.65); font-size: 0.8rem; text-align: right; }
+    #main-layout {
+      display: flex;
+      height: calc(100vh - 68px);
+    }
+    /* Left Panel */
+    #left-panel {
+      width: 38%;
+      min-width: 420px;
+      background: #fff;
+      border-right: 1px solid #dde3ee;
+      overflow-y: auto;
+      padding: 16px 18px 24px;
+    }
+    #left-panel::-webkit-scrollbar { width: 5px; }
+    #left-panel::-webkit-scrollbar-thumb { background: #c5cdd8; border-radius: 3px; }
+    /* Right Panel */
+    #right-panel {
+      width: 62%;
+      background: #eef1f7;
+      overflow-y: auto;
+      padding: 16px 20px 32px;
+    }
+    #right-panel::-webkit-scrollbar { width: 6px; }
+    #right-panel::-webkit-scrollbar-thumb { background: #b0b9c8; border-radius: 3px; }
+    /* Section card */
+    .section-card {
+      background: #fff;
+      border: 1px solid #e0e5ef;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .section-card h3 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-card h3 .toggle-icon {
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+    .section-card h3 .toggle-icon.collapsed { transform: rotate(-90deg); }
+    .section-card .card-body { transition: max-height 0.3s ease; overflow: hidden; }
+    .section-card .card-body.collapsed { max-height: 0 !important; padding: 0; }
+    /* Form elements */
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 3px;
+      margin-top: 8px;
+    }
+    .form-label:first-child { margin-top: 0; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      color: #2d3748;
+      background: #f8fafc;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(30,58,95,0.12);
+    }
+    .form-textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
+    /* Checkbox group */
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .checkbox-group label {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.78rem; color: #4a5568;
+      background: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .checkbox-group label:hover { background: #e2e8f0; }
+    .checkbox-group input[type="checkbox"] { accent-color: var(--primary); }
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff; border: none; padding: 9px 20px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(30,58,95,0.3); }
+    .btn-gold {
+      background: linear-gradient(135deg, var(--accent-gold), #d4af37);
+      color: #fff; border: none; padding: 9px 20px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-gold:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(201,162,39,0.35); }
+    .btn-green {
+      background: linear-gradient(135deg, var(--accent-green), #3a9466);
+      color: #fff; border: none; padding: 9px 24px; border-radius: 6px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+      width: 100%; justify-content: center;
+    }
+    .btn-green:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(46,125,85,0.35); }
+    .btn-outline {
+      background: transparent; color: var(--primary); border: 1px solid var(--primary);
+      padding: 6px 14px; border-radius: 5px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-outline:hover { background: var(--primary); color: #fff; }
+    /* Tabs */
+    .doc-tabs { display: flex; gap: 0; margin-bottom: 0; }
+    .doc-tab {
+      padding: 9px 22px; font-size: 0.85rem; font-weight: 600;
+      color: #6b7a8d; cursor: pointer; border: 1px solid #d0d7e2;
+      border-bottom: none; background: #e8ecf3; border-radius: 6px 6px 0 0;
+      transition: all 0.2s; user-select: none;
+    }
+    .doc-tab.active { background: #fff; color: var(--primary); border-bottom: 1px solid #fff; margin-bottom: -1px; position: relative; z-index: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .doc-paper {
+      background: #fff; border: 1px solid #d0d7e2; border-radius: 0 0 8px 8px;
+      padding: 28px 32px; min-height: 400px;
+    }
+    /* Parse result table */
+    .parse-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
+    .parse-table th { background: #edf2f7; color: var(--primary); padding: 5px 8px; text-align: left; font-weight: 600; border: 1px solid #d0d7e2; }
+    .parse-table td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+    .parse-table tr:nth-child(even) td { background: #f8fafc; }
+    .confidence-high { color: var(--accent-green); font-weight: 700; }
+    .confidence-mid { color: var(--accent-gold); font-weight: 700; }
+    .confidence-low { color: #c53030; font-weight: 700; }
+    /* URS reply table */
+    .urs-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .urs-table th { background: var(--primary); color: #fff; padding: 6px 8px; text-align: left; font-weight: 600; font-size: 0.72rem; }
+    .urs-table td { padding: 6px 8px; border: 1px solid #d0d7e2; vertical-align: top; }
+    .urs-table tr:nth-child(even) td { background: #f8fafc; }
+    .tag-comply { background: #c6f6d5; color: #22543d; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+    .tag-partial { background: #fefcbf; color: #744210; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+    .tag-na { background: #e2e8f0; color: #4a5568; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+    .tag-supplement { background: #bee3f8; color: #2a4365; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+    /* Quote document styles */
+    .quote-doc h2 { font-size: 1rem; color: var(--primary); border-bottom: 2px solid var(--accent-gold); padding-bottom: 4px; margin: 18px 0 10px; }
+    .quote-doc h3 { font-size: 0.88rem; color: var(--primary); margin: 12px 0 6px; }
+    .quote-doc p, .quote-doc li { font-size: 0.78rem; line-height: 1.7; color: #2d3748; }
+    .quote-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin: 8px 0; }
+    .quote-table th { background: #edf2f7; color: var(--primary); padding: 5px 8px; text-align: left; font-weight: 600; border: 1px solid #d0d7e2; }
+    .quote-table td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+    .quote-table tr:nth-child(even) td { background: #f8fafc; }
+    .quote-table .total-row td { background: #edf2f7; font-weight: 700; color: var(--primary); border-top: 2px solid var(--primary); }
+    .confidential-bar {
+      background: #fff9e6; border: 1px solid var(--accent-gold); border-radius: 4px;
+      padding: 6px 12px; font-size: 0.72rem; color: #744210; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    /* Comparison matrix */
+    .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+    .matrix-table th { background: var(--primary); color: #fff; padding: 5px 8px; text-align: center; font-weight: 600; }
+    .matrix-table td { padding: 5px 8px; border: 1px solid #e2e8f0; text-align: center; }
+    .matrix-table td:first-child { text-align: left; font-weight: 600; color: #2d3748; }
+    .matrix-table tr:nth-child(even) td { background: #f8fafc; }
+    .check-icon { color: var(--accent-green); font-weight: 700; }
+    .cross-icon { color: #c53030; font-weight: 700; }
+    /* Equipment type badges */
+    .equip-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;
+      margin: 2px 3px;
+    }
+    .equip-badge.sterile { background: #c6f6d5; color: #22543d; }
+    .equip-badge.vhp { background: #bee3f8; color: #2a4365; }
+    .equip-badge.integrated { background: #e9d8fd; color: #44337a; }
+    .equip-badge.negative { background: #fed7d7; color: #742a2a; }
+    /* Print styles */
+    @media print {
+      #app-header, #left-panel, .doc-tabs, .btn-outline { display: none !important; }
+      #right-panel { width: 100% !important; background: #fff !important; padding: 0 !important; }
+      #main-layout { height: auto !important; }
+      .doc-paper { border: none !important; padding: 0 !important; }
+    }
+    /* Animation */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    /* Loading spinner */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Multi-select dropdown */
+    .multi-select-wrap { position: relative; }
+    .multi-select-display {
+      width: 100%; padding: 7px 10px; border: 1px solid #cbd5e0; border-radius: 5px;
+      font-size: 0.82rem; background: #f8fafc; cursor: pointer; min-height: 36px;
+      display: flex; flex-wrap: wrap; gap: 3px; align-items: center;
+    }
+    .multi-select-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+      background: #fff; border: 1px solid #cbd5e0; border-radius: 5px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; margin-top: 2px;
+    }
+    .multi-select-dropdown.open { display: block; }
+    .multi-select-dropdown label {
+      display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+      font-size: 0.8rem; cursor: pointer; transition: background 0.15s;
+    }
+    .multi-select-dropdown label:hover { background: #edf2f7; }
+    .multi-select-dropdown input[type="checkbox"] { accent-color: var(--primary); }
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+      padding: 12px 24px; border-radius: 8px; color: #fff;
+      font-size: 0.85rem; font-weight: 600;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s;
+      pointer-events: none;
+    }
+    .toast.success { background: var(--accent-green); }
+    .toast.error { background: #c53030; }
+    .toast.info { background: var(--primary); }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+    /* Save prompt bar */
+    .save-prompt-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: #f0fff4; border: 1px solid var(--accent-green); border-radius: 6px;
+      padding: 8px 14px; margin-bottom: 10px; font-size: 0.82rem; color: #22543d;
+    }
+    .save-prompt-bar .btn-sm {
+      padding: 4px 14px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; border: none; color: #fff;
+      background: var(--accent-green); transition: all 0.2s;
+    }
+    .save-prompt-bar .btn-sm:hover { filter: brightness(1.1); }
+    /* Template card */
+    .template-card {
+      background: #fff; border: 1px solid #e0e5ef; border-radius: 8px;
+      padding: 16px; margin-bottom: 12px; transition: all 0.2s;
+    }
+    .template-card:hover { box-shadow: 0 4px 16px rgba(30,58,95,0.12); transform: translateY(-2px); }
+    .template-card h4 { font-size: 0.92rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+    .template-card .template-meta { font-size: 0.72rem; color: #718096; margin-bottom: 6px; }
+    .template-card .template-preview { font-size: 0.75rem; color: #4a5568; line-height: 1.5; margin-bottom: 8px; }
+    .template-card .template-actions { display: flex; gap: 6px; }
+    /* Collapsible panel helpers */
+    .collapsible-header {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none; padding: 8px 0;
+    }
+    .collapsible-header .arrow { transition: transform 0.2s; font-size: 0.7rem; }
+    .collapsible-header .arrow.collapsed { transform: rotate(-90deg); }
+    .collapsible-body { overflow: hidden; transition: max-height 0.3s ease; }
+    .collapsible-body.collapsed { max-height: 0 !important; }
+    /* Data tables in panels */
+    .data-table-wrap { max-height: 260px; overflow-y: auto; margin-top: 6px; }
+    .data-table-wrap::-webkit-scrollbar { width: 4px; }
+    .data-table-wrap::-webkit-scrollbar-thumb { background: #c5cdd8; border-radius: 2px; }
+    .empty-state { text-align: center; padding: 24px 0; color: #a0aec0; font-size: 0.82rem; }
+    .btn-danger-sm {
+      background: #e53e3e; color: #fff; border: none; padding: 3px 10px;
+      border-radius: 4px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger-sm:hover { background: #c53030; }
+    .btn-action-sm {
+      background: var(--primary); color: #fff; border: none; padding: 3px 10px;
+      border-radius: 4px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-action-sm:hover { filter: brightness(1.15); }
+    /* Template library grid */
+    .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 1200px) { .template-grid { grid-template-columns: 1fr; } }
+    /* ===== Mobile Responsive ===== */
+    #mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #dde3ee;
+      z-index: 100; padding: 6px 0;
+      justify-content: space-around;
+    }
+    #mobile-nav button {
+      flex: 1; border: none; background: none; padding: 10px;
+      font-size: 0.88rem; color: #6b7a8d; font-weight: 600; cursor: pointer;
+    }
+    #mobile-nav button.active { color: var(--primary); }
+    .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media screen and (max-width: 768px) {
+      body { min-width: auto !important; padding-bottom: 56px; }
+      #mobile-nav { display: flex !important; }
+      #main-layout {
+        flex-direction: column !important;
+        height: auto !important;
+      }
+      #left-panel {
+        width: 100% !important;
+        min-width: auto !important;
+        max-height: none !important;
+        border-right: none !important;
+        border-bottom: 2px solid #dde3ee;
+      }
+      #right-panel {
+        width: 100% !important;
+      }
+      #app-header .header-inner {
+        padding: 10px 14px !important;
+      }
+      #app-header h1 { font-size: 1.1rem !important; }
+      #app-header .subtitle { font-size: 0.65rem !important; }
+      #app-header .header-right { display: none !important; }
+      .form-textarea { min-height: 120px !important; }
+      .doc-paper { padding: 14px 12px !important; }
+      .urs-table, .quote-table, .matrix-table, .parse-table {
+        font-size: 0.65rem !important;
+      }
+      .urs-table th, .quote-table th { padding: 4px 4px !important; font-size: 0.6rem !important; }
+      .urs-table td, .quote-table td { padding: 4px 4px !important; }
+      .doc-tabs { flex-wrap: wrap; }
+      .doc-tab { padding: 7px 14px; font-size: 0.78rem; }
+      .btn-green, .btn-primary, .btn-gold { padding: 8px 14px; font-size: 0.82rem; }
+      .template-grid { grid-template-columns: 1fr !important; }
+      .hide-mobile { display: none !important; }
+    }
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      #left-panel { min-width: 340px !important; }
+      .doc-paper { padding: 20px 16px !important; }
+    }
+    /* Print styles */
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div id="app-header">
+    <div class="header-inner">
+      <div class="logo-wrap">
+        <div class="logo-icon">🔬</div>
+        <div>
+          <h1>隔离器售前文档生成系统</h1>
+          <div class="subtitle">Isolator Pre-Sales Document Generator — URS回复 & 快速报价</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="header-date"></span>
+        <span>版本 2.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div id="main-layout">
+    <!-- Left Panel -->
+    <div id="left-panel">
+      <!-- Customer Basic Info -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon">▼</span>📋 客户基本信息
+        </h3>
+        <div class="card-body">
+          <label class="form-label">客户公司名称</label>
+          <input type="text" id="customerName" class="form-input" placeholder="例：XX制药有限公司" />
+          <label class="form-label">项目名称</label>
+          <input type="text" id="projectName" class="form-input" placeholder="例：无菌分装线隔离器采购项目" />
+          <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+              <label class="form-label">联系人</label>
+              <input type="text" id="contactPerson" class="form-input" placeholder="联系人姓名" />
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">日期</label>
+              <input type="date" id="docDate" class="form-input" />
+            </div>
+          </div>
+          <label class="form-label">适用法规（多选）</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" class="reg-cb" value="cn_gmp" checked /> 中国GMP</label>
+            <label><input type="checkbox" class="reg-cb" value="fda" /> FDA 21 CFR</label>
+            <label><input type="checkbox" class="reg-cb" value="eu_gmp" checked /> EU GMP Annex 1</label>
+            <label><input type="checkbox" class="reg-cb" value="who_gmp" /> WHO GMP</label>
+            <label><input type="checkbox" class="reg-cb" value="pics" /> PIC/S</label>
+          </div>
+          <label class="form-label">供应商名称</label>
+          <input type="text" id="supplierName" class="form-input" value="XX隔离器技术有限公司" />
+        </div>
+      </div>
+
+      <!-- URS Input -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon">▼</span>📝 客户URS/询盘输入
+        </h3>
+        <div class="card-body">
+          <textarea id="ursInput" class="form-textarea" style="min-height:200px;"
+            placeholder="请粘贴客户的URS文档或询盘内容...&#10;&#10;示例：&#10;1. 设备需满足无菌隔离要求，正压运行&#10;2. 操作区洁净度ISO 5级&#10;3. VHP灭菌，灭菌效果≥6-log&#10;4. 配备手套检漏系统&#10;5. 操作区尺寸不小于L1200×D800×H900mm&#10;6. 需满足中国GMP及EU GMP Annex 1要求"></textarea>
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <button class="btn-primary" onclick="parseURS()" id="parseBtn">
+              🔍 智能解析
+            </button>
+            <button class="btn-outline" onclick="loadSampleURS()">
+              📄 加载示例
+            </button>
+            <button class="btn-outline" onclick="clearURS()">
+              🗑 清空
+            </button>
+          </div>
+          <!-- Parse Result Preview -->
+          <div id="parseResult" style="display:none;" class="fade-in"></div>
+        </div>
+      </div>
+
+      <!-- Manual Adjustment -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon">▼</span>⚙️ 手动调整
+        </h3>
+        <div class="card-body">
+          <label class="form-label">设备类型确认/修正（可多选）</label>
+          <div class="multi-select-wrap" id="equipTypeSelect">
+            <div class="multi-select-display" onclick="toggleMultiSelect(this)">
+              <span id="equipTypeDisplay" style="color:#a0aec0;">请先解析URS或手动选择</span>
+            </div>
+            <div class="multi-select-dropdown" id="equipTypeDropdown">
+              <label><input type="checkbox" class="equip-cb" value="sterile" /> 单体无菌隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="vhp" /> VHP传递窗</label>
+              <label><input type="checkbox" class="equip-cb" value="integrated" /> 整线隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="negative" /> 单体负压隔离器</label>
+            </div>
+          </div>
+          <label class="form-label" style="margin-top:10px;">关键参数修正</label>
+          <div id="paramAdjustArea" style="font-size:0.78rem; color:#718096;">
+            解析URS后将自动填充，也可手动输入
+          </div>
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <div style="flex:1;">
+              <label class="form-label">预算级别</label>
+              <select id="budgetLevel" class="form-select">
+                <option value="economy">经济型</option>
+                <option value="standard" selected>标准型</option>
+                <option value="premium">高端型</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label">语言</label>
+              <select id="docLang" class="form-select">
+                <option value="zh" selected>中文</option>
+                <option value="en">English</option>
+                <option value="bilingual">中英双语</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 💾 Save & Load Panel -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon collapsed">▼</span>💾 保存与加载
+        </h3>
+        <div class="card-body collapsed">
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <button class="btn-primary" onclick="saveAsQuotation()" style="font-size:0.78rem; padding:6px 12px;">
+              💾 保存为报价单
+            </button>
+            <button class="btn-gold" onclick="saveAsTemplate()" style="font-size:0.78rem; padding:6px 12px;">
+              📑 保存为模板
+            </button>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:0.72rem;">模板名称</label>
+            <input type="text" id="templateNameInput" class="form-input" placeholder="输入模板名称..." style="font-size:0.78rem; padding:5px 8px;" />
+          </div>
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <label class="form-label" style="font-size:0.72rem;">加载模板</label>
+              <select id="loadTemplateSelect" class="form-select" style="font-size:0.78rem; padding:5px 8px;" onchange="loadTemplate(this.value)">
+                <option value="">-- 选择模板 --</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label class="form-label" style="font-size:0.72rem;">加载客户</label>
+              <select id="loadCustomerSelect" class="form-select" style="font-size:0.78rem; padding:5px 8px;" onchange="loadCustomer(this.value)">
+                <option value="">-- 选择客户 --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📁 Historical Quotations Panel -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon collapsed">▼</span>📁 历史报价单
+        </h3>
+        <div class="card-body collapsed">
+          <div id="quotationListArea">
+            <div class="empty-state">暂无历史报价单</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 👥 Customer Archive Panel -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon collapsed">▼</span>👥 客户档案
+        </h3>
+        <div class="card-body collapsed">
+          <div id="customerListArea">
+            <div class="empty-state">暂无客户记录</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Button -->
+      <button class="btn-green" onclick="generateDocs()" id="generateBtn">
+        🚀 生成文档（URS回复 + 快速报价）
+      </button>
+    </div>
+
+    <!-- Right Panel -->
+    <div id="right-panel">
+      <div class="doc-tabs">
+        <div class="doc-tab active" onclick="switchTab('urs')">
+          📋 URS逐条回复
+        </div>
+        <div class="doc-tab" onclick="switchTab('quote')">
+          💰 快速报价单
+        </div>
+        <div class="doc-tab" onclick="switchTab('templates')">
+          📚 模板库
+        </div>
+      </div>
+      <!-- Save Prompt Bar -->
+      <div id="savePromptBar" style="display:none;" class="save-prompt-bar">
+        💾 是否保存此报价？
+        <button class="btn-sm" onclick="saveAsQuotation()">保存</button>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px; padding-right:4px;">
+        <button class="btn-outline" onclick="copyDoc()">
+          📋 复制全文
+        </button>
+        <button class="btn-outline" onclick="printDoc()">
+          🖨 打印/导出PDF
+        </button>
+      </div>
+
+      <!-- URS Reply Tab -->
+      <div id="tab-urs" class="tab-content active">
+        <div class="doc-paper" id="ursContent">
+          <div style="text-align:center; padding:60px 0; color:#a0aec0;">
+            <div style="font-size:3rem; margin-bottom:12px;">📋</div>
+            <div style="font-size:0.95rem; font-weight:600;">URS逐条回复文档</div>
+            <div style="font-size:0.8rem; margin-top:6px;">请在左侧输入客户URS内容并点击"智能解析"，然后点击"生成文档"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote Tab -->
+      <div id="tab-quote" class="tab-content">
+        <div class="doc-paper" id="quoteContent">
+          <div style="text-align:center; padding:60px 0; color:#a0aec0;">
+            <div style="font-size:3rem; margin-bottom:12px;">💰</div>
+            <div style="font-size:0.95rem; font-weight:600;">快速报价单</div>
+            <div style="font-size:0.8rem; margin-top:6px;">请在左侧完成URS解析后，点击"生成文档"自动生成报价</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates Library Tab -->
+      <div id="tab-templates" class="tab-content">
+        <div class="doc-paper" id="templatesContent">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <h2 style="font-size:1.1rem; color:var(--primary); margin:0;">📚 模板库</h2>
+            <button class="btn-gold" onclick="saveAsTemplate()" style="font-size:0.78rem; padding:6px 14px;">
+              ➕ 新建模板
+            </button>
+          </div>
+          <div id="templateGrid" class="template-grid">
+            <div class="empty-state" style="grid-column:1/-1;">暂无模板，点击"新建模板"或保存当前输入为模板</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ============================================================================
+// ISOLATOR PRE-SALES DOCUMENT GENERATOR - COMPLETE IMPLEMENTATION
+// ============================================================================
+
+// ---- Global State ----
+const state = {
+  parsedEquipTypes: [],
+  parsedParams: {},
+  parsedRequirements: [],
+  ursReplies: [],
+  currentTab: 'urs'
+};
+
+// ---- Constants ----
+const EQUIP_TYPES = {
+  sterile: { name: '单体无菌隔离器', en: 'Positive Pressure Sterile Isolator', badge: 'sterile' },
+  vhp: { name: 'VHP传递窗', en: 'VHP Pass-Through Chamber', badge: 'vhp' },
+  integrated: { name: '整线隔离器', en: 'Integrated Line Isolator', badge: 'integrated' },
+  negative: { name: '单体负压隔离器', en: 'Negative Pressure Isolator', badge: 'negative' }
+};
+
+const KEYWORD_MAP = {
+  sterile: ['无菌隔离', '正压隔离', '无菌检测', '无菌分装', '称量隔离', 'positive pressure isolator', 'sterile isolator', '无菌手套箱', '无菌操作', '正压运行', 'iso 5', 'class 100', '手套检漏', 'rtp', '快速转移', '无菌制剂', '灌装隔离'],
+  vhp: ['VHP传递', '传递窗', '灭菌传递', '物料传递', 'pass-through', 'VHP chamber', 'transfer hatch', '传递舱', '灭菌传递窗', 'vhp灭菌循环', '生物指示剂', '双门互锁', '物料灭菌'],
+  integrated: ['整线隔离', '灌装线隔离', '联动线', '全线隔离', 'integrated isolator', 'line isolator', 'filling line isolator', '灌装隔离', '轧盖隔离', '称重隔离', '多工位', '传送系统', '在线称重', '电子批记录', 'ebr'],
+  negative: ['负压隔离', 'OEL', '高活性', '有毒', 'HPAPI', 'negative pressure isolator', 'containment isolator', '防护隔离', '毒性隔离', '袋进袋出', 'bibo', 'hepa过滤', '排风', '密闭防护', 'oeb', '细胞毒性', '抗肿瘤']
+};
+
+const REGULATION_REFS = {
+  cn_gmp: {
+    name: '中国GMP',
+    refs: [
+      '《药品生产质量管理规范》2010年修订 第一章 总则',
+      '《药品生产质量管理规范》2010年修订 附录1 无菌药品',
+      '《药品生产质量管理规范》2010年修订 第五章 设备',
+      '《药品生产质量管理规范》2010年修订 第九章 生产管理',
+      '《药品生产质量管理规范》计算机化系统附录',
+      '《药品生产质量管理规范》确认与验证附录',
+      'GB/T 36035-2018 制药机械(设备)在位清洗、灭菌通用技术要求',
+      'GB 50073-2013 洁净厂房设计规范',
+      '《药品数据管理规范》征求意见稿'
+    ]
+  },
+  fda: {
+    name: 'FDA 21 CFR',
+    refs: [
+      '21 CFR Part 211 - Current Good Manufacturing Practice for Finished Pharmaceuticals',
+      '21 CFR Part 11 - Electronic Records; Electronic Signatures',
+      '21 CFR Part 212 - Current Good Manufacturing Practice for Positively Deemed Homeopathic Drugs',
+      'FDA Guidance for Industry: Process Validation: General Principles and Practices (2011)',
+      'FDA Guidance for Industry: Sterile Drug Products Produced by Aseptic Processing (2004)',
+      'FDA Guidance: Data Integrity and Compliance With Drug CGMP'
+    ]
+  },
+  eu_gmp: {
+    name: 'EU GMP',
+    refs: [
+      'EU GMP Annex 1 - Manufacture of Sterile Medicinal Products (2022 Revision)',
+      'EU GMP Annex 11 - Computerised Systems',
+      'EU GMP Annex 15 - Qualification and Validation',
+      'EU GMP Part I Chapter 3 - Premises and Equipment',
+      'EU GMP Part I Chapter 5 - Production',
+      'EN ISO 14644 - Cleanrooms and associated controlled environments',
+      'EN ISO 14644-7 - Separative devices (clean air hoods, gloveboxes, isolators and mini-environments)'
+    ]
+  },
+  who_gmp: {
+    name: 'WHO GMP',
+    refs: [
+      'WHO Technical Report Series No. 961 - Annex 6: WHO Good Manufacturing Practices for Sterile Pharmaceutical Products',
+      'WHO Technical Report Series No. 992 - Annex 2: WHO Good Practices for Pharmaceutical Quality Control Laboratories',
+      'WHO Technical Report Series No. 1025 - Annex 3: Guidelines on Qualification'
+    ]
+  },
+  pics: {
+    name: 'PIC/S',
+    refs: [
+      'PIC/S PE 009-16 - Guide to Good Manufacturing Practice for Medicinal Products',
+      'PIC/S PI 012-3 - Recommendations on Validation Master Plan, Installation and Operational Qualification',
+      'PIC/S PI 041-1 - Good Practices for Data Management and Integrity in Regulated GMP/GDP Environments'
+    ]
+  }
+};
+
+const PRICE_RANGES = {
+  sterile: { standard: [800000, 1500000], premium: [1800000, 3200000] },
+  vhp: { standard: [300000, 600000], premium: [800000, 1500000] },
+  integrated: { standard: [3000000, 6000000], premium: [7000000, 15000000] },
+  negative: { standard: [1000000, 2000000], premium: [2500000, 4500000] }
+};
+
+// ---- Utility Functions ----
+function formatDate(d) {
+  if (!d) d = new Date();
+  if (typeof d === 'string') d = new Date(d);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function generateQuoteNo() {
+  const now = new Date();
+  const seq = String(Math.floor(Math.random() * 900) + 100);
+  return `QT-${now.getFullYear()}-${seq}`;
+}
+
+function formatMoney(n) {
+  if (n >= 10000) return (n / 10000).toFixed(2) + '万元';
+  return n.toLocaleString('zh-CN') + '元';
+}
+
+function randomInRange(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function roundToTenThousand(n) {
+  return Math.round(n / 10000) * 10000;
+}
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('docDate').value = formatDate();
+  document.getElementById('header-date').textContent = formatDate() + ' ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  // Close multi-select on outside click
+  document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('equipTypeSelect');
+    if (!wrap.contains(e.target)) {
+      document.getElementById('equipTypeDropdown').classList.remove('open');
+    }
+  });
+  // Equip type checkbox change
+  document.querySelectorAll('.equip-cb').forEach(cb => {
+    cb.addEventListener('change', updateEquipTypeDisplay);
+  });
+});
+
+// ---- Card Toggle ----
+function toggleCard(h3) {
+  const icon = h3.querySelector('.toggle-icon');
+  const body = h3.nextElementSibling;
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    icon.classList.remove('collapsed');
+  } else {
+    body.classList.add('collapsed');
+    icon.classList.add('collapsed');
+  }
+}
+
+// ---- Multi-Select ----
+function toggleMultiSelect(el) {
+  const dd = document.getElementById('equipTypeDropdown');
+  dd.classList.toggle('open');
+}
+
+function updateEquipTypeDisplay() {
+  const checked = Array.from(document.querySelectorAll('.equip-cb:checked')).map(cb => cb.value);
+  const display = document.getElementById('equipTypeDisplay');
+  if (checked.length === 0) {
+    display.innerHTML = '<span style="color:#a0aec0;">请选择设备类型</span>';
+  } else {
+    display.innerHTML = checked.map(k => {
+      const t = EQUIP_TYPES[k];
+      return `<span class="equip-badge ${t.badge}">${t.name}</span>`;
+    }).join('');
+  }
+  state.parsedEquipTypes = checked;
+}
+
+// ---- Tab Switch ----
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'urs') {
+    document.querySelectorAll('.doc-tab')[0].classList.add('active');
+  } else if (tab === 'quote') {
+    document.querySelectorAll('.doc-tab')[1].classList.add('active');
+  } else if (tab === 'templates') {
+    document.querySelectorAll('.doc-tab')[2].classList.add('active');
+  }
+}
+
+// ---- Sample URS ----
+function loadSampleURS() {
+  const sample = `1. 设备用途：用于无菌制剂的无菌分装操作，要求正压运行，操作区洁净度达到ISO 5级
+2. 设备须配备VHP灭菌系统，灭菌效果达到10⁻⁶ SAL
+3. 操作区尺寸不小于L1500×D900×H900mm
+4. 手套数量不少于4只，需配备手套完整性检测系统
+5. 配备RTP快速转移端口用于物料传递
+6. 须满足中国GMP（2010年修订）及EU GMP Annex 1（2022版）要求
+7. 压力维持范围+10~+50Pa，相对背景环境
+8. 报警系统：压力偏差、门未关闭、VHP浓度异常等
+9. HMI人机界面须符合21 CFR Part 11电子记录要求
+10. 环境监测接口：活性粒子及非活性粒子采样口
+11. 材质：内壁316L不锈钢，Ra≤0.4μm
+12. 须提供FAT/SAT及IQ/OQ/PQ验证文件包
+13. 电源：380V/50Hz三相
+14. 压缩空气：0.4~0.6MPa
+15. 交付周期不超过6个月`;
+  document.getElementById('ursInput').value = sample;
+}
+
+function clearURS() {
+  document.getElementById('ursInput').value = '';
+  document.getElementById('parseResult').style.display = 'none';
+  document.getElementById('parseResult').innerHTML = '';
+  state.parsedEquipTypes = [];
+  state.parsedParams = {};
+  state.parsedRequirements = [];
+  document.querySelectorAll('.equip-cb').forEach(cb => cb.checked = false);
+  updateEquipTypeDisplay();
+  document.getElementById('paramAdjustArea').innerHTML = '<span style="color:#a0aec0;">解析URS后将自动填充</span>';
+}
+
+// ---- URS Parsing ----
+function parseURS() {
+  const text = document.getElementById('ursInput').value.trim();
+  if (!text) {
+    alert('请先输入客户URS内容');
+    return;
+  }
+  const btn = document.getElementById('parseBtn');
+  btn.innerHTML = '<span class="spinner"></span> 解析中...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    // 1. Identify equipment types
+    const typeScores = { sterile: 0, vhp: 0, integrated: 0, negative: 0 };
+    const lowerText = text.toLowerCase();
+    for (const [type, keywords] of Object.entries(KEYWORD_MAP)) {
+      for (const kw of keywords) {
+        if (lowerText.includes(kw.toLowerCase())) {
+          typeScores[type] += (kw.length > 4 ? 2 : 1);
+        }
+      }
+    }
+    const maxScore = Math.max(...Object.values(typeScores));
+    const identifiedTypes = [];
+    for (const [type, score] of Object.entries(typeScores)) {
+      if (score > 0 && score >= maxScore * 0.3) {
+        identifiedTypes.push(type);
+      }
+    }
+    if (identifiedTypes.length === 0) identifiedTypes.push('sterile'); // default
+
+    // Update checkboxes
+    document.querySelectorAll('.equip-cb').forEach(cb => {
+      cb.checked = identifiedTypes.includes(cb.value);
+    });
+    updateEquipTypeDisplay();
+    state.parsedEquipTypes = identifiedTypes;
+
+    // 2. Extract technical parameters
+    const params = extractParameters(text);
+    state.parsedParams = params;
+    renderParamAdjust(params);
+
+    // 3. Split URS items
+    const items = splitURSItems(text);
+    state.parsedRequirements = items;
+
+    // 4. Build parse result preview
+    const regulations = getSelectedRegulations();
+    renderParseResult(identifiedTypes, typeScores, params, items);
+
+    // 5. Also update URS reply state for regulations reference
+    state.parsedRegulations = regulations;
+
+    btn.innerHTML = '🔍 智能解析';
+    btn.disabled = false;
+  }, 800);
+}
+
+function extractParameters(text) {
+  const params = {};
+  // Dimensions
+  const dimMatch = text.match(/(\d+)\s*[×xX*]\s*(\d+)\s*[×xX*]\s*(\d+)/);
+  if (dimMatch) {
+    params.workAreaLength = dimMatch[1];
+    params.workAreaDepth = dimMatch[2];
+    params.workAreaHeight = dimMatch[3];
+  }
+  // Pressure
+  const posPressure = text.match(/\+(\d+)\s*[~\-至]\s*\+?(\d+)\s*Pa/);
+  if (posPressure) {
+    params.pressureMin = posPressure[1];
+    params.pressureMax = posPressure[2];
+    params.pressureType = '正压';
+  }
+  const negPressure = text.match(/-(\d+)\s*[~\-至]\s*-?(\d+)\s*Pa/);
+  if (negPressure) {
+    params.pressureMin = negPressure[1];
+    params.pressureMax = negPressure[2];
+    params.pressureType = '负压';
+  }
+  // OEL
+  const oelMatch = text.match(/OEL\s*[<≤]\s*([\d.]+)\s*[μu]?g\/m[³3]/i);
+  if (oelMatch) params.oel = oelMatch[1];
+  // SAL
+  const salMatch = text.match(/10[⁻\-]([⁶6])/);
+  if (salMatch) params.sal = '10⁻⁶';
+  // ISO class
+  const isoMatch = text.match(/ISO\s*5/i);
+  if (isoMatch) params.cleanClass = 'ISO 5级';
+  // Gloves
+  const gloveMatch = text.match(/(\d+)\s*[只付个]\s*手套/);
+  if (gloveMatch) params.gloveCount = gloveMatch[1];
+  // VHP
+  if (text.match(/VHP|汽化过氧化氢/i)) params.vhpRequired = true;
+  // RTP
+  if (text.match(/RTP|快速转移/)) params.rtpRequired = true;
+  // Material
+  if (text.match(/316L/)) params.material = '316L不锈钢';
+  if (text.match(/Ra\s*[≤<]\s*([\d.]+)\s*[μu]m/)) params.raValue = text.match(/Ra\s*[≤<]\s*([\d.]+)\s*[μu]m/)[1];
+  // Validation
+  if (text.match(/FAT/)) params.fatRequired = true;
+  if (text.match(/SAT/)) params.satRequired = true;
+  if (text.match(/IQ.*OQ.*PQ|验证文件/)) params.validationRequired = true;
+  // Power
+  const powerMatch = text.match(/(\d{3})V\s*[\/]\s*(\d{2,3})Hz/);
+  if (powerMatch) { params.voltage = powerMatch[1]; params.frequency = powerMatch[2]; }
+  // Air
+  const airMatch = text.match(/([\d.]+)\s*[~\-至]\s*([\d.]+)\s*MPa/);
+  if (airMatch) { params.airPressureMin = airMatch[1]; params.airPressureMax = airMatch[2]; }
+  // 21 CFR Part 11
+  if (text.match(/21\s*CFR\s*Part\s*11/i)) params.part11Required = true;
+
+  return params;
+}
+
+function renderParamAdjust(params) {
+  const area = document.getElementById('paramAdjustArea');
+  let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">';
+  const fieldDefs = [
+    { key: 'workAreaLength', label: '工作区长度(mm)' },
+    { key: 'workAreaDepth', label: '工作区深度(mm)' },
+    { key: 'workAreaHeight', label: '工作区高度(mm)' },
+    { key: 'pressureType', label: '压力类型', type: 'select', options: ['正压','负压'] },
+    { key: 'pressureMin', label: '压力下限(Pa)' },
+    { key: 'pressureMax', label: '压力上限(Pa)' },
+    { key: 'cleanClass', label: '洁净等级', type: 'select', options: ['ISO 5级','ISO 7级','ISO 8级'] },
+    { key: 'gloveCount', label: '手套数量' },
+    { key: 'material', label: '主体材质', type: 'select', options: ['316L不锈钢','304不锈钢'] },
+    { key: 'oel', label: 'OEL要求(μg/m³)' }
+  ];
+  for (const f of fieldDefs) {
+    const val = params[f.key] || '';
+    html += `<div><label class="form-label" style="font-size:0.7rem; margin-top:4px;">${f.label}</label>`;
+    if (f.type === 'select') {
+      html += `<select class="form-select param-field" data-key="${f.key}" style="font-size:0.75rem; padding:4px 6px;">`;
+      for (const opt of f.options) {
+        html += `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`;
+      }
+      html += '</select>';
+    } else {
+      html += `<input class="form-input param-field" data-key="${f.key}" value="${val}" style="font-size:0.75rem; padding:4px 6px;" />`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function splitURSItems(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  const items = [];
+  let counter = 0;
+  const patterns = [
+    /^URS[-‐–—]\s*(\d+)/i,
+    /^(\d+\.\d+)\s/,
+    /^(\d+[.)])\s/,
+    /^[（(]\s*(\d+)\s*[)）]\s/,
+    /^第(\d+)条/
+  ];
+  for (const line of lines) {
+    let matched = false;
+    for (const pat of patterns) {
+      const m = line.trim().match(pat);
+      if (m) {
+        counter++;
+        items.push({
+          id: `URS-${String(counter).padStart(3, '0')}`,
+          text: line.trim().replace(pat, '').trim(),
+          originalLine: line.trim()
+        });
+        matched = true;
+        break;
+      }
+    }
+    if (!matched && line.trim().length > 4) {
+      counter++;
+      items.push({
+        id: `URS-${String(counter).padStart(3, '0')}`,
+        text: line.trim(),
+        originalLine: line.trim()
+      });
+    }
+  }
+  return items;
+}
+
+function classifyRequirement(text) {
+  const lower = text.toLowerCase();
+  if (/压力|洁净|iso\s*\d|温度|湿度|气流|压差/.test(lower)) return '性能参数';
+  if (/材质|不锈钢|ra|密封|焊接|表面/.test(lower)) return '材质结构';
+  if (/验证|iq|oq|pq|fat|sat|确认|验证文件/.test(lower)) return '验证确认';
+  if (/安全|报警|互锁|联锁|紧急|保护/.test(lower)) return '安全联锁';
+  if (/控制|hmi|plc|scada|part\s*11|电子记录|审计/.test(lower)) return '控制系统';
+  if (/文件|手册|图纸|证书|文档|dqb/.test(lower)) return '文件资料';
+  if (/电源|压缩空气|vacuum|公用/.test(lower)) return '公用工程';
+  if (/vhp|灭菌|消毒|灭菌循环/.test(lower)) return '灭菌系统';
+  if (/手套|rtp|传递|转移|物料/.test(lower)) return '物料传递';
+  if (/监测|采样|粒子|微生物|环境监测/.test(lower)) return '环境监测';
+  if (/交付|周期|培训|售后|质保|服务/.test(lower)) return '交付服务';
+  return '其他';
+}
+
+function determineResponse(text, equipType) {
+  const lower = text.toLowerCase();
+  // Things we definitely comply with for isolators
+  if (/正压|iso\s*5|vhp|手套|316L|报警|hmi|环境监测|洁净|rtp|快速转移/.test(lower)) return '满足';
+  if (/负压|oel|bibo|高活性/.test(lower) && equipType === 'negative') return '满足';
+  if (/负压|oel|bibo|高活性/.test(lower) && equipType !== 'negative') return '部分满足';
+  if (/整线|联动|多工位|传送/.test(lower) && equipType === 'integrated') return '满足';
+  if (/整线|联动|多工位|传送/.test(lower) && equipType !== 'integrated') return '部分满足';
+  if (/21\s*cfr\s*part\s*11/.test(lower)) return '满足';
+  if (/fat|sat|iq|oq|pq|验证/.test(lower)) return '满足';
+  if (/电源|压缩空气|公用/.test(lower)) return '满足';
+  if (/交付|周期|培训|售后|质保/.test(lower)) return '满足';
+  return '满足';
+}
+
+function generateTechNote(text, equipType) {
+  const lower = text.toLowerCase();
+  const notes = [];
+
+  if (/正压/.test(lower)) {
+    notes.push('设备采用正压气流屏障设计，通过变频风机维持工作区相对背景环境+10~+50Pa正压差，压力传感器实时监测，PLC自动调节风机转速补偿压差偏差。');
+  }
+  if (/iso\s*5|class\s*100|百级/.test(lower)) {
+    notes.push('工作区采用垂直单向流设计，HEPA过滤器效率≥99.995%（MPPS），在线扫描检漏合格。操作区静态洁净度达到ISO 5级（≥0.5μm粒子≤3,520个/m³），动态条件下维持ISO 5级。');
+  }
+  if (/vhp|灭菌/.test(lower)) {
+    notes.push('配备集成式VHP发生器，采用汽化过氧化氢灭菌工艺。典型灭菌参数：H₂O₂浓度2-8ml/m³，灭菌温度25-50°C可调，灭菌时间60-120min可调，灭菌效果达到SAL 10⁻⁶。残气催化分解至H₂O₂浓度<1ppm。');
+  }
+  if (/手套/.test(lower)) {
+    notes.push('配备重症监护级无菌手套，手套接口符合ISO 14644-7标准。手套完整性检测系统采用压力衰减法，最小可检漏率1×10⁻⁴ Pa·m³/s，满足EU GMP Annex 1手套检漏要求。');
+  }
+  if (/rtp|快速转移/.test(lower)) {
+    notes.push('配置RTP（Rapid Transfer Port）快速转移端口，α-β对接系统，对接过程保持密封完整性，物料转移时不破坏隔离器内部洁净环境。');
+  }
+  if (/316L/.test(lower)) {
+    notes.push('工作区内壁及所有工艺接触面采用316L不锈钢制造，内表面电解抛光至Ra≤0.4μm，圆角过渡R≥3mm，无卫生死角，符合cGMP洁净表面要求。');
+  }
+  if (/报警/.test(lower)) {
+    notes.push('配置分级报警系统：一级报警（压力偏差超限、门未关、VHP浓度异常）触发声光报警并记录；二级报警（风机故障、过滤器压差超限）触发紧急停机保护。所有报警事件记录于审计追踪系统。');
+  }
+  if (/hmi|人机界面/.test(lower)) {
+    notes.push('配备10英寸工业触摸屏HMI，基于SCADA系统架构，符合21 CFR Part 11电子记录与电子签名要求。具备三级权限管理（操作员/工艺员/管理员）、审计追踪、电子签名、数据备份功能。');
+  }
+  if (/环境监测|采样/.test(lower)) {
+    notes.push('预留活性粒子采样口（微生物采样器接口）及非活性粒子采样口（粒子计数器接口），支持在线监测系统集成。采样口位置按EU GMP Annex 1要求布置于关键操作区域。');
+  }
+  if (/负压/.test(lower)) {
+    notes.push('采用负压气流屏障设计，通过变频排风系统维持工作区相对背景环境-10~-50Pa负压差。双重HEPA排风过滤（效率≥99.995% MPPS），支持在线扫描检漏。BIBO（袋进袋出）安全更换过滤器，操作人员无需接触污染过滤器。');
+  }
+  if (/oel/.test(lower)) {
+    notes.push('设备设计满足OEL <1μg/m³的密闭防护要求，采用负压气密舱体+双重HEPA过滤+气闸缓冲的多级防护策略。设备外表面擦拭试验符合OEB 4/5级要求。');
+  }
+  if (/整线|联动/.test(lower)) {
+    notes.push('采用模块化整线设计，灌装工位、轧盖工位、称重工位一体化集成，传送系统采用洁净级传送带/推杆联动。全线VHP一体化灭菌或分区独立灭菌可选，中央PLC统一控制各工位时序联动。');
+  }
+  if (/fat|sat/.test(lower)) {
+    notes.push('提供完整的FAT/SAT验证方案，FAT在供应商工厂进行主要功能和性能测试，SAT在用户现场进行安装确认和运行确认。验证方案按GMP确认与验证附录及ISPE GAMP 5指南编制。');
+  }
+  if (/iq|oq|pq/.test(lower)) {
+    notes.push('提供DQ/IQ/OQ/PQ全套验证文件包，包括：设计确认（DQ）报告、安装确认（IQ）方案与报告、运行确认（OQ）方案与报告、性能确认（PQ）方案与报告。验证文件符合中国GMP确认与验证附录及EU GMP Annex 15要求。');
+  }
+  if (/电源|380|电压/.test(lower)) {
+    notes.push('电源要求：AC 380V±10%，50Hz±2%，三相五线制。设备总功率约8-15kW（视配置）。配备UPS不间断电源为控制系统供电，断电后数据保持≥30分钟。');
+  }
+  if (/压缩空气/.test(lower)) {
+    notes.push('压缩空气要求：0.4~0.6MPa，洁净度等级ISO 8573-1 Class 1.4.1（油份≤0.01mg/m³，水份压力露点≤-40°C，固体颗粒≤0.1μm）。配备精密调压阀和洁净过滤器。');
+  }
+  if (/交付|周期/.test(lower)) {
+    notes.push('标准方案交付周期16-20周（自合同签订及预付款到账之日起），高级方案20-28周。含设计确认2-3周、制造10-14周、FAT 1-2周、运输1-2周、现场安装调试2-4周。');
+  }
+
+  if (notes.length === 0) {
+    notes.push('本设备可完全满足客户该项需求，具体技术方案详见技术规格书。');
+  }
+  return notes.join(' ');
+}
+
+function findRegulationRef(text, regulations) {
+  const lower = text.toLowerCase();
+  const refs = [];
+
+  if (/无菌|正压|洁净|iso\s*5/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 无菌药品 第三条、第十七条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.8, §4.19, §4.20');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.3, §6.5');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.3, §6.5');
+  }
+  if (/vhp|灭菌/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第五十八条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.34, §4.35');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §9.4');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §9.4');
+  }
+  if (/手套/.test(lower)) {
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.14, §4.15, §8.20');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §8.12');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §8.12');
+  }
+  if (/验证|iq|oq|pq|fat|sat/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 确认与验证附录');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 15');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 1025 Annex 3 Guidelines on Qualification');
+    if (regulations.includes('pics')) refs.push('PIC/S PI 012-3 Validation Master Plan');
+  }
+  if (/21\s*cfr\s*part\s*11|电子记录|审计/.test(lower)) {
+    if (regulations.includes('fda')) refs.push('21 CFR Part 11 §11.10, §11.30');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 11');
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 计算机化系统附录');
+    if (regulations.includes('pics')) refs.push('PIC/S PI 041-1 Data Management and Integrity');
+  }
+  if (/负压|oel|密闭|防护/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第四条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.6');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §4.2');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §4.2');
+  }
+  if (/材质|不锈钢|ra|表面/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 第五章 第四十九条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Part I Chapter 3 §3.38');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §12.2');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Chapter 3 §3.38');
+  }
+  if (/报警|安全|联锁/.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 第五章 第五十一条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.8');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.7');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.7');
+  }
+
+  return refs.length > 0 ? refs.join('；') : '-';
+}
+
+function getSupplementaryItems(equipTypes, existingReplies, regulations) {
+  const supplementDB = {
+    sterile: [
+      { text: '隔离器舱体气密性要求：在+500Pa保压条件下，压降不超过+50Pa/30min', category: '性能参数' },
+      { text: '手套完整性检测：应按EU GMP Annex 1要求定期检测手套完整性，检测方法应为经验证的物理方法', category: '验证确认' },
+      { text: '隔离器内部气流组织：垂直单向流，截面风速0.25~0.50m/s，均匀度≥80%', category: '性能参数' },
+      { text: 'HEPA过滤器：效率≥99.995%（MPPS），DOP/PAO扫描检漏合格', category: '性能参数' },
+      { text: '隔离器噪声级：操作位噪声≤65dB(A)', category: '性能参数' },
+      { text: '照明系统：工作区照度≥500Lux，防爆灯具', category: '性能参数' },
+      { text: '所有工艺接触面应无卫生死角，圆角过渡R≥3mm', category: '材质结构' },
+      { text: '设备应具备电子批记录(EBR)数据接口', category: '控制系统' },
+      { text: '设备应提供完整的备件清单和推荐备件清单', category: '文件资料' },
+      { text: '供应商应提供安装、操作和维护手册(SOP)', category: '文件资料' }
+    ],
+    vhp: [
+      { text: 'VHP灭菌循环应可编程设定，至少包含：除湿→灭菌→排残→通风四个阶段', category: '灭菌系统' },
+      { text: '双门互锁系统：两侧门不得同时开启，需验证互锁功能可靠性', category: '安全联锁' },
+      { text: 'VHP残气排放：催化分解后H₂O₂残留浓度<1ppm', category: '性能参数' },
+      { text: '生物指示剂挑战：采用嗜热脂肪地芽孢杆菌BI，灭菌效果≥6-log杀灭', category: '验证确认' },
+      { text: '传递窗内壁材质：316L不锈钢，Ra≤0.4μm', category: '材质结构' },
+      { text: 'VHP发生器应具备运行数据自动记录和审计追踪功能', category: '控制系统' },
+      { text: '传递窗应具备物料兼容性验证数据', category: '验证确认' },
+      { text: '应提供VHP灭菌循环开发报告', category: '文件资料' },
+      { text: '传递窗舱体气密性要求：在+500Pa保压条件下，压降不超过+50Pa/30min', category: '性能参数' },
+      { text: 'VHP浓度监测：舱内应配置在线H₂O₂浓度传感器，实时监测灭菌浓度', category: '控制系统' },
+      { text: '供应商应提供安装、操作和维护手册(SOP)', category: '文件资料' },
+      { text: '设备应提供完整的备件清单和推荐备件清单', category: '文件资料' }
+    ],
+    integrated: [
+      { text: '全线联动控制：灌装→轧盖→称重各工位应实现自动化联动，节拍匹配', category: '控制系统' },
+      { text: '在线称重系统(W&Q)接口：支持主流称重品牌数据通信', category: '控制系统' },
+      { text: '全线VHP灭菌方案：一体式或分区式灭菌，灭菌循环应覆盖全部洁净区', category: '灭菌系统' },
+      { text: '传送系统：洁净级传送带/推杆，材质符合洁净要求，可在线清洁', category: '材质结构' },
+      { text: '缓冲区/鼠洞设计：灌装与轧盖区间过渡段应维持气流和压力梯度', category: '性能参数' },
+      { text: '集成环境监测系统：全线关键点在线粒子监测', category: '环境监测' },
+      { text: '电子批记录(EBR)接口：支持MES系统集成', category: '控制系统' },
+      { text: '全线设备应统一PLC/SCADA平台管理', category: '控制系统' },
+      { text: '全线验证应包含各工位联动运行确认(PQ)', category: '验证确认' },
+      { text: '应提供整线设备平面布局图和3D模型', category: '文件资料' }
+    ],
+    negative: [
+      { text: '负压舱体气密性：在-500Pa保压条件下，压升不超过+50Pa/30min', category: '性能参数' },
+      { text: 'OEL控制验证：设备外表面擦拭试验和空气监测应符合OEB 4/5级要求', category: '验证确认' },
+      { text: '双重HEPA排风过滤：每级效率≥99.995%（MPPS），支持在线扫描检漏', category: '性能参数' },
+      { text: 'BIBO安全更换过滤器：排风HEPA应配置袋进袋出(BIBO)更换装置', category: '材质结构' },
+      { text: '气闸/缓冲设计：进出料气闸应具备压差梯度，防止有毒物质外泄', category: '性能参数' },
+      { text: 'WIP在线清洗系统：舱体内壁及关键部位应可在线清洗(WIP)', category: '性能参数' },
+      { text: '毒性残留监测：排风口应配置在线H₂O₂/毒性物质残留监测仪', category: '环境监测' },
+      { text: '操作员防护：手套/半身服接口，确保操作人员零暴露', category: '安全联锁' },
+      { text: '紧急排风系统：应配置备用排风机，主排风机故障时自动切换', category: '安全联锁' },
+      { text: '应提供OEL/OEB评估报告和密闭性能验证方案', category: '文件资料' }
+    ]
+  };
+
+  const supplementary = [];
+  let counter = existingReplies.length;
+
+  for (const et of equipTypes) {
+    const items = supplementDB[et] || [];
+    for (const item of items) {
+      // Check if similar requirement already exists
+      const isDuplicate = existingReplies.some(r =>
+        r.originalText && similarityCheck(r.originalText, item.text)
+      );
+      if (!isDuplicate) {
+        counter++;
+        supplementary.push({
+          id: `URS-${String(counter).padStart(3, '0')}`,
+          originalText: item.text,
+          category: item.category,
+          supplierResponse: '满足',
+          technicalNote: generateTechNote(item.text, et),
+          regulationRef: findRegulationRef(item.text, regulations),
+          remark: '[供应商补充]',
+          isSupplementary: true
+        });
+      }
+    }
+  }
+  return supplementary;
+}
+
+function similarityCheck(text1, text2) {
+  // Simple keyword overlap check
+  const words1 = new Set(text1.replace(/[，。、；：""''（）\[\]【】\s]+/g, ' ').split(' ').filter(w => w.length > 1));
+  const words2 = new Set(text2.replace(/[，。、；：""''（）\[\]【】\s]+/g, ' ').split(' ').filter(w => w.length > 1));
+  let overlap = 0;
+  for (const w of words1) { if (words2.has(w)) overlap++; }
+  const total = Math.max(words1.size, words2.size);
+  return total > 0 && overlap / total > 0.5;
+}
+
+function renderParseResult(identifiedTypes, typeScores, params, items) {
+  const resultDiv = document.getElementById('parseResult');
+  let html = '<div class="fade-in">';
+
+  // Equipment type identification
+  html += '<div style="margin-top:12px;"><strong style="font-size:0.82rem; color:var(--primary);">🔍 识别设备类型</strong>';
+  html += '<div style="margin-top:6px;">';
+  for (const t of identifiedTypes) {
+    const info = EQUIP_TYPES[t];
+    html += `<span class="equip-badge ${info.badge}" style="font-size:0.78rem; padding:4px 12px;">${info.name}</span>`;
+  }
+  html += '</div>';
+
+  // Score details
+  html += '<div style="margin-top:8px; font-size:0.72rem; color:#718096;">匹配得分：';
+  for (const [k, v] of Object.entries(typeScores)) {
+    if (v > 0) html += `${EQUIP_TYPES[k].name}(${v}) `;
+  }
+  html += '</div></div>';
+
+  // Key parameters extracted
+  html += '<div style="margin-top:12px;"><strong style="font-size:0.82rem; color:var(--primary);">📊 关键参数提取</strong>';
+  html += '<div class="table-scroll-wrap"><table class="parse-table"><thead><tr><th>需求项</th><th>识别内容</th><th>置信度</th></tr></thead><tbody>';
+  const paramEntries = [];
+  for (const [k, v] of Object.entries(params)) {
+    const label = {
+      workAreaLength: '工作区长度', workAreaDepth: '工作区深度', workAreaHeight: '工作区高度',
+      pressureMin: '压力下限', pressureMax: '压力上限', pressureType: '压力类型',
+      oel: 'OEL要求', sal: 'SAL要求', cleanClass: '洁净等级', gloveCount: '手套数量',
+      vhpRequired: 'VHP灭菌', rtpRequired: 'RTP快速转移', material: '主体材质',
+      raValue: '表面粗糙度Ra', fatRequired: 'FAT验证', satRequired: 'SAT验证',
+      validationRequired: 'IQ/OQ/PQ验证', part11Required: '21 CFR Part 11',
+      voltage: '电压', frequency: '频率', airPressureMin: '气压下限', airPressureMax: '气压上限'
+    }[k] || k;
+    const displayVal = typeof v === 'boolean' ? (v ? '✅ 是' : '❌ 否') : v;
+    const confidence = typeof v === 'boolean' ? '高' : (String(v).length > 0 ? '高' : '低');
+    paramEntries.push({ label, displayVal, confidence });
+  }
+  if (paramEntries.length === 0) {
+    html += '<tr><td colspan="3" style="color:#a0aec0; text-align:center;">未识别到明确技术参数</td></tr>';
+  } else {
+    for (const p of paramEntries) {
+      const cls = p.confidence === '高' ? 'confidence-high' : (p.confidence === '中' ? 'confidence-mid' : 'confidence-low');
+      html += `<tr><td>${p.label}</td><td>${p.displayVal}</td><td class="${cls}">${p.confidence}</td></tr>`;
+    }
+  }
+  html += '</tbody></table></div></div>';
+
+  // URS items count
+  html += `<div style="margin-top:10px; font-size:0.78rem; color:var(--primary);">
+    📌 已识别 <strong>${items.length}</strong> 条客户需求条款
+  </div>`;
+
+  html += '</div>';
+  resultDiv.innerHTML = html;
+  resultDiv.style.display = 'block';
+}
+
+// ---- Get Selected Regulations ----
+function getSelectedRegulations() {
+  return Array.from(document.querySelectorAll('.reg-cb:checked')).map(cb => cb.value);
+}
+
+// ---- Get Selected Equip Types ----
+function getSelectedEquipTypes() {
+  return Array.from(document.querySelectorAll('.equip-cb:checked')).map(cb => cb.value);
+}
+
+// ---- Get Current Params ----
+function getCurrentParams() {
+  const params = {};
+  document.querySelectorAll('.param-field').forEach(el => {
+    const key = el.dataset.key;
+    params[key] = el.value;
+  });
+  return params;
+}
+
+// ---- Generate Documents ----
+function generateDocs() {
+  const customerName = document.getElementById('customerName').value.trim() || '待填写';
+  const projectName = document.getElementById('projectName').value.trim() || '待填写';
+  const contactPerson = document.getElementById('contactPerson').value.trim() || '待填写';
+  const docDate = document.getElementById('docDate').value || formatDate();
+  const supplierName = document.getElementById('supplierName').value.trim() || 'XX隔离器技术有限公司';
+  const budgetLevel = document.getElementById('budgetLevel').value;
+  const regulations = getSelectedRegulations();
+  const equipTypes = getSelectedEquipTypes();
+
+  if (equipTypes.length === 0) {
+    alert('请先选择设备类型（可通过智能解析或手动选择）');
+    return;
+  }
+
+  const ursText = document.getElementById('ursInput').value.trim();
+  if (!ursText) {
+    alert('请输入客户URS内容');
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    // Parse URS items
+    const items = splitURSItems(ursText);
+    // Generate URS replies - use the primary (first) equipment type for response determination
+    const primaryEquipType = equipTypes[0];
+    const replies = items.map((item, idx) => ({
+      id: item.id,
+      originalText: item.text,
+      category: classifyRequirement(item.text),
+      supplierResponse: determineResponse(item.text, primaryEquipType),
+      technicalNote: generateTechNote(item.text, primaryEquipType),
+      regulationRef: findRegulationRef(item.text, regulations),
+      remark: '',
+      isSupplementary: false
+    }));
+
+    // Add supplementary items
+    const supplementary = getSupplementaryItems(equipTypes, replies, regulations);
+    const allReplies = [...replies, ...supplementary];
+
+    // Render URS Reply
+    renderURSReply(allReplies, customerName, projectName, supplierName, docDate, regulations, equipTypes);
+    // Render Quote
+    renderQuote(equipTypes, customerName, projectName, supplierName, docDate, regulations, budgetLevel);
+
+    btn.innerHTML = '🚀 生成文档（URS回复 + 快速报价）';
+    btn.disabled = false;
+    // Show save prompt bar
+    document.getElementById('savePromptBar').style.display = 'flex';
+    switchTab('urs');
+  }, 600);
+}
+
+// ---- Render URS Reply ----
+function renderURSReply(replies, customer, project, supplier, date, regulations, equipTypes) {
+  const regNames = regulations.map(r => REGULATION_REFS[r]?.name || r).join('、');
+  const equipNames = equipTypes.map(t => EQUIP_TYPES[t].name).join(' / ');
+  const container = document.getElementById('ursContent');
+
+  let html = `
+    <div class="confidential-bar">🔒 本文件为${supplier}机密文件，未经授权不得复制或传播</div>
+    <div style="text-align:center; margin-bottom:20px;">
+      <h1 style="font-size:1.2rem; color:var(--primary); margin-bottom:4px;">用户需求说明（URS）逐条回复</h1>
+      <div style="font-size:0.78rem; color:#718096;">User Requirement Specification — Point-by-Point Reply</div>
+    </div>
+    <div class="table-scroll-wrap"><table class="parse-table" style="margin-bottom:16px; width:100%;">
+      <tr><td style="width:120px; font-weight:600; color:var(--primary);">客户名称</td><td>${customer}</td><td style="width:120px; font-weight:600; color:var(--primary);">项目名称</td><td>${project}</td></tr>
+      <tr><td style="font-weight:600; color:var(--primary);">供应商</td><td>${supplier}</td><td style="font-weight:600; color:var(--primary);">日期</td><td>${date}</td></tr>
+      <tr><td style="font-weight:600; color:var(--primary);">设备类型</td><td>${equipNames}</td><td style="font-weight:600; color:var(--primary);">适用法规</td><td>${regNames}</td></tr>
+    </table></div>
+    <hr style="border:none; border-top:2px solid var(--primary); margin:16px 0;" />
+    <div class="table-scroll-wrap"><table class="urs-table">
+      <thead>
+        <tr>
+          <th style="width:60px;">条款编号</th>
+          <th style="width:22%;">客户需求原文</th>
+          <th style="width:55px;">分类</th>
+          <th style="width:65px;">回复</th>
+          <th>技术说明</th>
+          <th style="width:18%;">法规依据</th>
+          <th style="width:55px;">备注</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  for (const r of replies) {
+    let tagClass = 'tag-comply';
+    if (r.supplierResponse === '部分满足') tagClass = 'tag-partial';
+    if (r.supplierResponse === '不适用') tagClass = 'tag-na';
+    const remarkTag = r.isSupplementary ? '<br/><span class="tag-supplement">供应商补充</span>' : (r.remark || '');
+
+    html += `<tr>
+      <td style="font-weight:600; color:var(--primary); text-align:center;">${r.id}</td>
+      <td>${r.originalText}</td>
+      <td style="font-size:0.68rem; color:#718096; text-align:center;">${r.category}</td>
+      <td style="text-align:center;"><span class="${tagClass}">${r.supplierResponse}</span></td>
+      <td style="font-size:0.72rem; line-height:1.6;">${r.technicalNote}</td>
+      <td style="font-size:0.68rem; color:#718096;">${r.regulationRef}</td>
+      <td style="text-align:center; font-size:0.68rem;">${remarkTag}</td>
+    </tr>`;
+  }
+
+  html += `</tbody></table></div>`;
+
+  // Regulation references appendix
+  html += `<div style="margin-top:24px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+    <h3 style="font-size:0.88rem; color:var(--primary); margin-bottom:8px;">📑 引用法规标准</h3>`;
+  for (const reg of regulations) {
+    const regInfo = REGULATION_REFS[reg];
+    if (regInfo) {
+      html += `<div style="margin-bottom:8px;"><strong style="font-size:0.78rem;">${regInfo.name}：</strong>`;
+      html += `<ul style="margin:3px 0 0 16px; font-size:0.72rem; color:#4a5568; line-height:1.7;">`;
+      for (const ref of regInfo.refs) {
+        html += `<li>${ref}</li>`;
+      }
+      html += '</ul></div>';
+    }
+  }
+  html += '</div>';
+
+  // Signature area
+  html += `
+    <div style="margin-top:30px; display:flex; justify-content:space-between;">
+      <div style="text-align:center; width:40%;">
+        <div style="font-size:0.78rem; font-weight:600; color:var(--primary); margin-bottom:30px;">供应商签章</div>
+        <div style="border-top:1px solid #a0aec0; padding-top:6px; font-size:0.72rem; color:#718096;">签名 / 日期</div>
+      </div>
+      <div style="text-align:center; width:40%;">
+        <div style="font-size:0.78rem; font-weight:600; color:var(--primary); margin-bottom:30px;">客户确认</div>
+        <div style="border-top:1px solid #a0aec0; padding-top:6px; font-size:0.72rem; color:#718096;">签名 / 日期</div>
+      </div>
+    </div>`;
+
+  container.innerHTML = html;
+}
+
+// ---- Render Quote ----
+function renderQuote(equipTypes, customer, project, supplier, date, regulations, budgetLevel) {
+  const container = document.getElementById('quoteContent');
+  const quoteNo = generateQuoteNo();
+  const expiryDate = formatDate(new Date(Date.now() + 30 * 24 * 3600 * 1000));
+  const primaryType = equipTypes[0];
+  const equipInfo = EQUIP_TYPES[primaryType];
+  const regNames = regulations.map(r => REGULATION_REFS[r]?.name || r).join('、');
+
+  // Price calculation
+  const isPremium = budgetLevel === 'premium';
+  const priceKey = isPremium ? 'premium' : 'standard';
+  const basePrice = roundToTenThousand(randomInRange(PRICE_RANGES[primaryType][priceKey][0], PRICE_RANGES[primaryType][priceKey][1]));
+
+  // Calculate sub-items
+  const equipmentPrice = basePrice;
+  const vhpPrice = primaryType === 'vhp' ? 0 : roundToTenThousand(equipmentPrice * (isPremium ? 0.18 : 0.15));
+  const installPrice = roundToTenThousand(equipmentPrice * (isPremium ? 0.08 : 0.06));
+  const validationPrice = roundToTenThousand(equipmentPrice * (isPremium ? 0.10 : 0.07));
+  const trainingPrice = roundToTenThousand(equipmentPrice * (isPremium ? 0.03 : 0.02));
+  const sparePartsPrice = roundToTenThousand(equipmentPrice * (isPremium ? 0.04 : 0.03));
+  const docPackagePrice = roundToTenThousand(equipmentPrice * (isPremium ? 0.03 : 0.02));
+  const shippingPrice = roundToTenThousand(equipmentPrice * 0.03);
+  const standardTotal = equipmentPrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationPrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+
+  // Premium extras
+  const monitorSystem = isPremium ? roundToTenThousand(equipmentPrice * 0.12) : 0;
+  const ebrInterface = isPremium ? roundToTenThousand(equipmentPrice * 0.06) : 0;
+  const redundantConfig = isPremium ? roundToTenThousand(equipmentPrice * 0.08) : 0;
+  const premiumExtras = monitorSystem + ebrInterface + redundantConfig;
+  const premiumTotal = standardTotal + premiumExtras;
+
+  // Tech specs based on type
+  const techSpecs = getTechSpecs(primaryType, isPremium);
+  const stdConfig = getStandardConfig(primaryType, isPremium);
+  const advConfig = getAdvancedConfig(primaryType, isPremium);
+  const comparisonMatrix = getComparisonMatrix(primaryType);
+
+  let html = `<div class="quote-doc">
+    <div class="confidential-bar">🔒 商业机密 — 本报价仅供${customer}内部使用，未经${supplier}书面许可不得向第三方披露</div>
+
+    <!-- Header -->
+    <div style="text-align:center; margin-bottom:16px;">
+      <h1 style="font-size:1.3rem; color:var(--primary); margin-bottom:2px;">快速报价单</h1>
+      <div style="font-size:0.78rem; color:#718096;">Quick Quotation</div>
+    </div>
+
+    <div class="table-scroll-wrap"><table class="parse-table" style="margin-bottom:16px;">
+      <tr><td style="width:100px; font-weight:600; color:var(--primary);">报价单编号</td><td>${quoteNo}</td><td style="width:100px; font-weight:600; color:var(--primary);">日期</td><td>${date}</td></tr>
+      <tr><td style="font-weight:600; color:var(--primary);">有效期至</td><td>${expiryDate}</td><td style="font-weight:600; color:var(--primary);">客户名称</td><td>${customer}</td></tr>
+      <tr><td style="font-weight:600; color:var(--primary);">项目名称</td><td>${project}</td><td style="font-weight:600; color:var(--primary);">供应商</td><td>${supplier}</td></tr>
+      <tr><td style="font-weight:600; color:var(--primary);">设备类型</td><td>${equipInfo.name}（${equipInfo.en}）</td><td style="font-weight:600; color:var(--primary);">适用法规</td><td>${regNames}</td></tr>
+    </table></div>
+
+    <hr style="border:none; border-top:2px solid var(--accent-gold); margin:16px 0;" />
+
+    <!-- A. Equipment Overview -->
+    <h2>A. 设备概述</h2>
+    <p>${getEquipmentOverview(primaryType)}</p>
+
+    <h3>系统描述</h3>
+    <p>${getSystemDescription(primaryType)}</p>
+
+    <h3>关键技术参数</h3>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th>参数项目</th><th>标准配置</th><th>高级配置</th></tr></thead>
+      <tbody>`;
+
+  for (const spec of techSpecs) {
+    html += `<tr><td style="font-weight:600;">${spec.name}</td><td>${spec.standard}</td><td>${spec.premium}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>
+
+    <h3>验证支持说明</h3>
+    <p>本报价包含DQ/IQ/OQ/PQ全套验证文件包，验证方案依据中国GMP确认与验证附录、EU GMP Annex 15及ISPE GAMP 5指南编制。FAT在供应商工厂执行，SAT在用户现场执行。如需额外验证服务（如工艺验证、培养基模拟灌装验证支持），可另行协商。</p>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- B. Configuration List -->
+    <h2>B. 配置清单</h2>
+
+    <h3>B.1 标准方案配置</h3>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:40px;">序号</th><th style="width:140px;">名称</th><th>规格描述</th><th style="width:40px;">数量</th><th style="width:40px;">单位</th><th>备注</th></tr></thead>
+      <tbody>`;
+
+  for (let i = 0; i < stdConfig.length; i++) {
+    const c = stdConfig[i];
+    html += `<tr><td style="text-align:center;">${i + 1}</td><td>${c.name}</td><td style="font-size:0.72rem;">${c.spec}</td><td style="text-align:center;">${c.qty}</td><td style="text-align:center;">${c.unit}</td><td style="font-size:0.7rem; color:#718096;">${c.remark}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>
+
+    <h3>B.2 高级方案配置</h3>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:40px;">序号</th><th style="width:140px;">名称</th><th>规格描述</th><th style="width:40px;">数量</th><th style="width:40px;">单位</th><th>备注</th></tr></thead>
+      <tbody>`;
+
+  for (let i = 0; i < advConfig.length; i++) {
+    const c = advConfig[i];
+    html += `<tr><td style="text-align:center;">${i + 1}</td><td>${c.name}</td><td style="font-size:0.72rem;">${c.spec}</td><td style="text-align:center;">${c.qty}</td><td style="text-align:center;">${c.unit}</td><td style="font-size:0.7rem; color:#718096;">${c.remark}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>
+
+    <h3>B.3 方案对比矩阵</h3>
+    <div class="table-scroll-wrap"><table class="matrix-table">
+      <thead><tr><th style="width:35%; text-align:left;">功能项目</th><th>标准方案</th><th>高级方案</th></tr></thead>
+      <tbody>`;
+
+  for (const m of comparisonMatrix) {
+    const stdIcon = m.standard ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+    const advIcon = m.premium ? '<span class="check-icon">✓</span>' : '<span class="cross-icon">✗</span>';
+    html += `<tr><td>${m.name}</td><td>${stdIcon}${m.standardNote ? ' ' + m.standardNote : ''}</td><td>${advIcon}${m.premiumNote ? ' ' + m.premiumNote : ''}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- C. Price Breakdown -->
+    <h2>C. 报价明细</h2>
+
+    <h3>C.1 标准方案报价</h3>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:40px;">序号</th><th>项目</th><th style="width:120px;">金额（人民币）</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:center;">1</td><td>设备本体</td><td style="text-align:right;">${formatMoney(equipmentPrice)}</td><td>含主体结构、手套、视窗等</td></tr>`;
+
+  if (primaryType !== 'vhp') {
+    html += `<tr><td style="text-align:center;">2</td><td>VHP发生器系统</td><td style="text-align:right;">${formatMoney(vhpPrice)}</td><td>含VHP发生器、管路、喷嘴</td></tr>`;
+  }
+
+  html += `
+        <tr><td style="text-align:center;">3</td><td>安装调试</td><td style="text-align:right;">${formatMoney(installPrice)}</td><td>含现场安装、调试、开机验证</td></tr>
+        <tr><td style="text-align:center;">4</td><td>验证服务（IQ/OQ/PQ）</td><td style="text-align:right;">${formatMoney(validationPrice)}</td><td>含验证方案编制及执行</td></tr>
+        <tr><td style="text-align:center;">5</td><td>培训服务</td><td style="text-align:right;">${formatMoney(trainingPrice)}</td><td>操作+维护培训，3天</td></tr>
+        <tr><td style="text-align:center;">6</td><td>备件包（首年）</td><td style="text-align:right;">${formatMoney(sparePartsPrice)}</td><td>易损件及推荐备件</td></tr>
+        <tr><td style="text-align:center;">7</td><td>技术文件包</td><td style="text-align:right;">${formatMoney(docPackagePrice)}</td><td>含手册、图纸、证书</td></tr>
+        <tr><td style="text-align:center;">8</td><td>运输保险</td><td style="text-align:right;">${formatMoney(shippingPrice)}</td><td>国内运输+一切险</td></tr>
+        <tr class="total-row"><td></td><td>标准方案合计</td><td style="text-align:right;">${formatMoney(standardTotal)}</td><td>含13%增值税</td></tr>
+      </tbody>
+    </table></div>`;
+
+  if (isPremium) {
+    html += `
+    <h3>C.2 高级方案报价（在标准方案基础上增加）</h3>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:40px;">序号</th><th>项目</th><th style="width:120px;">金额（人民币）</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:center;">1</td><td>在线环境监测系统</td><td style="text-align:right;">${formatMoney(monitorSystem)}</td><td>含粒子计数器、微生物采样器接口及集成</td></tr>
+        <tr><td style="text-align:center;">2</td><td>EBR电子批记录接口</td><td style="text-align:right;">${formatMoney(ebrInterface)}</td><td>MES系统集成接口及数据映射</td></tr>
+        <tr><td style="text-align:center;">3</td><td>冗余配置</td><td style="text-align:right;">${formatMoney(redundantConfig)}</td><td>备用风机、冗余PLC、UPS电源</td></tr>
+        <tr class="total-row"><td></td><td>高级方案合计</td><td style="text-align:right;">${formatMoney(premiumTotal)}</td><td>含13%增值税</td></tr>
+      </tbody>
+    </table></div>`;
+  }
+
+  html += `
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- D. Payment Terms -->
+    <h2>D. 付款条款</h2>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:40px;">阶段</th><th>付款节点</th><th style="width:80px;">比例</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:center;">1</td><td>合同签订</td><td style="text-align:center;">30%</td><td>合同签订后5个工作日内支付预付款</td></tr>
+        <tr><td style="text-align:center;">2</td><td>FAT验收通过</td><td style="text-align:center;">30%</td><td>FAT验收报告签署后10个工作日内支付</td></tr>
+        <tr><td style="text-align:center;">3</td><td>SAT验收通过</td><td style="text-align:center;">30%</td><td>SAT验收报告签署后10个工作日内支付</td></tr>
+        <tr><td style="text-align:center;">4</td><td>质保期满</td><td style="text-align:center;">10%</td><td>质保期满后10个工作日内支付尾款</td></tr>
+      </tbody>
+    </table></div>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- E. Delivery -->
+    <h2>E. 交货周期</h2>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th>方案</th><th style="width:120px;">预计周期</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>标准方案</td><td style="text-align:center; font-weight:600;">16-20周</td><td>自合同签订及预付款到账之日起计算</td></tr>
+        <tr><td>高级方案</td><td style="text-align:center; font-weight:600;">20-28周</td><td>含额外系统集成交付与调试时间</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:0.72rem; color:#718096; margin-top:6px;">* 交货周期受客户现场准备情况影响，如现场不具备安装条件可能相应顺延。</p>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- F. After-Sales -->
+    <h2>F. 售后服务条款</h2>
+    <div class="table-scroll-wrap"><table class="quote-table">
+      <thead><tr><th style="width:140px;">项目</th><th>标准方案</th><th>高级方案</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600;">质保期</td><td>12个月（自SAT验收签署之日起）</td><td>24个月（自SAT验收签署之日起）</td></tr>
+        <tr><td style="font-weight:600;">远程响应时间</td><td>24小时内</td><td>4小时内</td></tr>
+        <tr><td style="font-weight:600;">现场响应时间</td><td>48小时内</td><td>24小时内</td></tr>
+        <tr><td style="font-weight:600;">年度保养</td><td>1次/年</td><td>2次/年</td></tr>
+        <tr><td style="font-weight:600;">软件升级</td><td>质保期内免费</td><td>质保期内免费+质保期后3年优惠</td></tr>
+        <tr><td style="font-weight:600;">备件供应</td><td>设备停产后5年</td><td>设备停产后10年</td></tr>
+        <tr><td style="font-weight:600;">技术培训</td><td>3天（操作+维护）</td><td>5天（操作+维护+验证）</td></tr>
+      </tbody>
+    </table></div>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
+
+    <!-- Disclaimer -->
+    <div style="background:#fff9e6; border:1px solid var(--accent-gold); border-radius:6px; padding:10px 14px; font-size:0.72rem; color:#744210; margin-top:16px;">
+      <strong>声明：</strong>
+      1. 本报价有效期为30天，逾期价格可能调整。<br/>
+      2. 本报价不含土建、公用工程接口以外的工作。<br/>
+      3. 最终价格以双方签订的正式合同为准。<br/>
+      4. 如客户URS有重大变更，供应商保留调整报价的权利。
+    </div>
+
+    <!-- Signature -->
+    <div style="margin-top:30px; display:flex; justify-content:space-between;">
+      <div style="text-align:center; width:40%;">
+        <div style="font-size:0.85rem; font-weight:600; color:var(--primary); margin-bottom:30px;">供应商</div>
+        <div style="font-size:0.78rem; color:#4a5568;">${supplier}</div>
+        <div style="border-top:1px solid #a0aec0; padding-top:6px; margin-top:20px; font-size:0.72rem; color:#718096;">授权签章 / 日期</div>
+      </div>
+      <div style="text-align:center; width:40%;">
+        <div style="font-size:0.85rem; font-weight:600; color:var(--primary); margin-bottom:30px;">客户</div>
+        <div style="font-size:0.78rem; color:#4a5568;">${customer}</div>
+        <div style="border-top:1px solid #a0aec0; padding-top:6px; margin-top:20px; font-size:0.72rem; color:#718096;">授权签章 / 日期</div>
+      </div>
+    </div>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// ---- Equipment Overview ----
+function getEquipmentOverview(type) {
+  const overviews = {
+    sterile: '单体无菌隔离器是一种基于正压气流屏障原理的密闭操作设备，用于无菌制剂的无菌分装、无菌检测、称量等操作。工作区维持相对背景环境+10~+50Pa正压差，配合HEPA过滤器实现ISO 5级洁净环境，有效防止外部污染侵入，确保无菌操作安全性。设备集VHP灭菌系统、手套完整性监测、RTP物料传递等关键功能于一体，满足中国GMP附录1及EU GMP Annex 1对无菌隔离操作的技术要求。',
+    vhp: 'VHP传递窗是一种基于汽化过氧化氢（VHP）灭菌原理的物料传递设备，用于洁净区与非洁净区（或不同洁净等级区域）之间的物料、工具灭菌传递。设备采用双门互锁安全设计，配置集成式VHP发生器，灭菌循环可编程控制（除湿→灭菌→排残→通风），灭菌效果达到SAL 10⁻⁶。残气经催化分解后H₂O₂残留浓度<1ppm，保障操作人员安全。适用于制药企业物料、工器具、耗材的在线灭菌传递。',
+    integrated: '整线隔离器是一种多工位联动无菌隔离系统，将灌装、轧盖、称重等关键工位集成于同一隔离屏障内，实现全线无菌隔离操作。系统采用中央PLC/SCADA统一控制各工位时序联动，传送系统贯穿全线，物料在隔离环境内完成全流程操作。支持全线VHP一体化灭菌或分区独立灭菌，集成环境监测系统及EBR电子批记录接口，满足大规模无菌制剂连续化生产需求。',
+    negative: '单体负压隔离器是一种基于负压气流屏障原理的密闭防护设备，用于有毒/高活性药品（HPAPI、抗肿瘤药物等）的生产操作防护。工作区维持相对背景环境-10~-50Pa负压差，通过双重HEPA排风过滤系统确保有毒物质零外泄，设备外表面OEL控制可达<1μg/m³甚至<0.1μg/m³。配备BIBO袋进袋出过滤器安全更换、气闸缓冲设计、WIP在线清洗及毒性残留监测等关键功能，全面保障操作人员安全。'
+  };
+  return overviews[type] || overviews.sterile;
+}
+
+function getSystemDescription(type) {
+  const descriptions = {
+    sterile: '工作原理：变频送风机将经HEPA过滤的洁净空气送入工作区，形成垂直单向流，并通过压差传感器实时监测与PLC自动调节，维持工作区相对背景环境+10~+50Pa正压差。VHP灭菌时，VHP发生器将浓度为35%的H₂O₂溶液汽化后注入密闭舱体，实现表面灭菌，灭菌完成后催化分解残气。操作人员通过手套/半身服进行密闭操作，物料通过RTP快速转移端口或传递窗进行无菌传递。',
+    vhp: '工作原理：VHP传递窗由两个互锁舱室组成，操作时仅一侧门可开启。物料放入后关闭舱门，启动VHP灭菌循环（除湿→灭菌→排残→通风），汽化过氧化氢浓度、温度、时间可编程设定。灭菌完成后经催化分解残气至安全浓度，方可开启对侧舱门取出物料。双门互锁系统确保两侧门不得同时开启，防止交叉污染。',
+    integrated: '工作原理：整线隔离器将灌装工位、轧盖工位、称重工位等集成为一体式隔离屏障系统，各工位间通过洁净传送系统连接。中央PLC/SCADA统一控制全线设备时序联动，实现自动灌装→自动轧盖→在线称重→剔废的连续化生产流程。全线可执行一体化VHP灭菌或分区独立灭菌。各工位间设置缓冲区/鼠洞接口，维持压力梯度和气流方向。集成环境监测系统实时监控关键区洁净参数。',
+    negative: '工作原理：变频排风机将工作区内空气经双重HEPA过滤后排出，形成相对背景环境-10~-50Pa负压差，确保有毒粉尘/气体不会外泄。排风HEPA过滤器配置BIBO袋进袋出更换装置，更换时操作人员无需接触污染过滤器。进出料通过气闸缓冲舱进行，防止开舱时有毒物质逸出。WIP在线清洗系统可自动冲洗舱体内壁及关键部位，清洗废水密闭收集处理。毒性残留监测仪实时监控排风口浓度。'
+  };
+  return descriptions[type] || descriptions.sterile;
+}
+
+// ---- Tech Specs ----
+function getTechSpecs(type, isPremium) {
+  const specs = {
+    sterile: [
+      { name: '工作区尺寸(标准)', standard: 'L1200×D800×H900mm', premium: 'L1500×D900×H1000mm' },
+      { name: '洁净等级(静态)', standard: 'ISO 5级 (Class 100)', premium: 'ISO 5级 (Class 100)' },
+      { name: '压力范围', standard: '+10~+50Pa', premium: '+10~+50Pa' },
+      { name: '气流型式', standard: '垂直单向流', premium: '垂直单向流' },
+      { name: '截面风速', standard: '0.25~0.50m/s', premium: '0.25~0.50m/s' },
+      { name: 'HEPA过滤器效率', standard: '≥99.995% (MPPS)', premium: '≥99.995% (MPPS)' },
+      { name: 'VHP灭菌效果', standard: 'SAL 10⁻⁶', premium: 'SAL 10⁻⁶' },
+      { name: '手套数量', standard: '4只', premium: '6只' },
+      { name: '手套检漏', standard: '人工目视检漏', premium: '自动手套完整性检测系统' },
+      { name: '物料传递', standard: 'RTP快速转移端口', premium: 'RTP + 传递窗双通道' },
+      { name: '内壁材质', standard: '316L不锈钢 Ra≤0.4μm', premium: '316L不锈钢 Ra≤0.4μm' },
+      { name: 'HMI系统', standard: '10寸触摸屏+基础PLC', premium: '15寸触摸屏+SCADA系统' },
+      { name: '审计追踪', standard: '基础事件记录', premium: '完整21 CFR Part 11合规' },
+      { name: '环境监测接口', standard: '预留采样口', premium: '集成在线监测系统' }
+    ],
+    vhp: [
+      { name: '传递舱内尺寸', standard: 'L600×D600×H600mm', premium: 'L800×D800×H800mm' },
+      { name: 'VHP浓度范围', standard: '2~6ml/m³', premium: '2~8ml/m³' },
+      { name: '灭菌温度范围', standard: '25~45°C', premium: '25~50°C' },
+      { name: '灭菌时间', standard: '60~120min', premium: '60~180min' },
+      { name: '灭菌效果', standard: 'SAL 10⁻⁶', premium: 'SAL 10⁻⁶' },
+      { name: '残气浓度', standard: '<1ppm', premium: '<1ppm' },
+      { name: '双门互锁', standard: '机械+电气联锁', premium: '机械+电气+PLC三重联锁' },
+      { name: '内壁材质', standard: '316L不锈钢 Ra≤0.4μm', premium: '316L不锈钢 Ra≤0.4μm' },
+      { name: '控制系统', standard: 'PLC+7寸触摸屏', premium: 'PLC+SCADA+10寸触摸屏' },
+      { name: '数据记录', standard: '循环参数自动记录', premium: '完整审计追踪系统' }
+    ],
+    integrated: [
+      { name: '全线总长度', standard: '约8~12m', premium: '约10~16m' },
+      { name: '工作区高度', standard: 'H900mm', premium: 'H1000mm' },
+      { name: '洁净等级', standard: 'ISO 5级(关键区)/ISO 7级(背景)', premium: 'ISO 5级(全线)' },
+      { name: '压力梯度', standard: '+10~+50Pa(梯度分布)', premium: '+10~+50Pa(梯度分布)' },
+      { name: '工位数量', standard: '3工位(灌装+轧盖+称重)', premium: '4-5工位(可扩展)' },
+      { name: 'VHP灭菌', standard: '分区独立灭菌', premium: '全线一体化灭菌' },
+      { name: '传送系统', standard: '洁净传送带', premium: '洁净传送带+推杆组合' },
+      { name: '在线称重', standard: '预留接口', premium: '集成W&Q系统' },
+      { name: 'EBR接口', standard: '预留数据接口', premium: '集成EBR+MES接口' },
+      { name: '环境监测', standard: '预留采样口', premium: '集成在线监测系统' },
+      { name: '控制系统', standard: '多PLC+基础SCADA', premium: '中央SCADA+分布式PLC' },
+      { name: '内壁材质', standard: '316L不锈钢 Ra≤0.4μm', premium: '316L不锈钢 Ra≤0.4μm' }
+    ],
+    negative: [
+      { name: '工作区尺寸(标准)', standard: 'L1200×D800×H900mm', premium: 'L1500×D900×H1000mm' },
+      { name: '压力范围', standard: '-10~-50Pa', premium: '-10~-50Pa' },
+      { name: 'OEL控制目标', standard: '<1μg/m³', premium: '<0.1μg/m³' },
+      { name: '排风HEPA', standard: '双重HEPA≥99.995%', premium: '双重HEPA≥99.995%+在线扫描检漏' },
+      { name: 'BIBO更换', standard: '标配', premium: '标配+自动密封阀' },
+      { name: '气闸缓冲', standard: '单气闸', premium: '双气闸+压力梯度' },
+      { name: 'WIP清洗', standard: '手动WIP喷球', premium: '全自动WIP系统' },
+      { name: '毒性监测', standard: '预留监测口', premium: '集成在线毒性残留监测' },
+      { name: '手套数量', standard: '4只', premium: '4只+半身服接口' },
+      { name: '内壁材质', standard: '316L不锈钢 Ra≤0.4μm', premium: '316L不锈钢 Ra≤0.4μm' },
+      { name: '紧急排风', standard: '备用排风机', premium: '冗余排风系统+UPS' },
+      { name: '控制系统', standard: 'PLC+10寸HMI', premium: 'PLC+SCADA+15寸HMI' }
+    ]
+  };
+  return specs[type] || specs.sterile;
+}
+
+// ---- Standard Config ----
+function getStandardConfig(type, isPremium) {
+  const configs = {
+    sterile: [
+      { name: '隔离器舱体', spec: '316L不锈钢焊接舱体，圆角R≥3mm，Ra≤0.4μm', qty: '1', unit: '套', remark: '含视窗、照明' },
+      { name: '送风系统', spec: '变频风机+HEPA过滤器(≥99.995% MPPS)', qty: '1', unit: '套', remark: '含风阀、压差传感器' },
+      { name: 'VHP灭菌系统', spec: '集成式VHP发生器，35% H₂O₂，灭菌效果SAL10⁻⁶', qty: '1', unit: '套', remark: '含催化分解器' },
+      { name: '无菌手套', spec: 'ISO 14644-7标准手套及接口', qty: '4', unit: '只', remark: '含备用手套' },
+      { name: 'RTP快速转移端口', spec: 'α-β对接密封系统', qty: '1', unit: '套', remark: '' },
+      { name: 'HMI人机界面', spec: '10寸工业触摸屏', qty: '1', unit: '套', remark: '含PLC控制器' },
+      { name: '压差监测系统', spec: '微压差传感器+数字显示+报警', qty: '1', unit: '套', remark: '' },
+      { name: '报警系统', spec: '声光报警器，压力/门/VHP异常报警', qty: '1', unit: '套', remark: '' },
+      { name: '环境监测接口', spec: '活性粒子+非活性粒子采样口', qty: '4', unit: '个', remark: '' },
+      { name: '电气控制系统', spec: 'PLC+I/O模块+断路器+接线端子', qty: '1', unit: '套', remark: '含控制柜' },
+      { name: '气动系统', spec: '气缸+电磁阀+气路处理件', qty: '1', unit: '套', remark: '' },
+      { name: '不锈钢工作台', spec: '316L不锈钢台面，可拆卸', qty: '1', unit: '件', remark: '' },
+      { name: '门系统', spec: '气动密封门+安全联锁', qty: '2', unit: '扇', remark: '' },
+      { name: '公用工程接口', spec: '电源、压缩空气、VHP管路接口', qty: '1', unit: '套', remark: '' },
+      { name: '基础文件包', spec: '操作手册、维护手册、电气图纸、P&ID', qty: '1', unit: '套', remark: '' }
+    ],
+    vhp: [
+      { name: '传递窗舱体', spec: '316L不锈钢焊接舱体，Ra≤0.4μm', qty: '1', unit: '套', remark: '双侧开门' },
+      { name: 'VHP发生器', spec: '集成式VHP发生器，浓度2~6ml/m³可调', qty: '1', unit: '套', remark: '' },
+      { name: '催化分解器', spec: 'VHP残气催化分解，出口<1ppm', qty: '1', unit: '套', remark: '' },
+      { name: '双门互锁系统', spec: '机械+电气联锁，防止同时开启', qty: '1', unit: '套', remark: '' },
+      { name: '密封门', spec: '气动密封门+观察窗', qty: '2', unit: '扇', remark: '' },
+      { name: 'HEPA过滤器', spec: '送排风HEPA，效率≥99.995%', qty: '2', unit: '只', remark: '' },
+      { name: 'PLC控制系统', spec: 'PLC+7寸触摸屏', qty: '1', unit: '套', remark: '' },
+      { name: '温湿度传感器', spec: '舱内温湿度监测', qty: '1', unit: '套', remark: '' },
+      { name: 'VHP浓度传感器', spec: '在线H₂O₂浓度监测', qty: '1', unit: '只', remark: '' },
+      { name: '压差监测', spec: '舱内压差传感器+显示', qty: '1', unit: '套', remark: '' },
+      { name: '不锈钢搁架', spec: '316L不锈钢，可调节层架', qty: '2', unit: '层', remark: '' },
+      { name: '报警系统', spec: '声光报警，VHP泄漏/门异常报警', qty: '1', unit: '套', remark: '' },
+      { name: '数据记录系统', spec: '循环参数自动记录+U盘导出', qty: '1', unit: '套', remark: '' },
+      { name: '公用工程接口', spec: '电源、压缩空气接口', qty: '1', unit: '套', remark: '' },
+      { name: '文件包', spec: '操作手册、电气图纸、验证方案', qty: '1', unit: '套', remark: '' }
+    ],
+    integrated: [
+      { name: '全线隔离器舱体', spec: '316L不锈钢焊接舱体，Ra≤0.4μm', qty: '1', unit: '套', remark: '含灌装/轧盖/称重工位' },
+      { name: '送风系统', spec: '变频风机+HEPA(≥99.995%)', qty: '1', unit: '套', remark: '分区送风' },
+      { name: 'VHP灭菌系统', spec: '分区独立VHP灭菌，灭菌效果SAL10⁻⁶', qty: '1', unit: '套', remark: '含催化分解器' },
+      { name: '灌装工位', spec: '灌装接口+无菌操作手套', qty: '1', unit: '套', remark: '灌装机客户自备或另行选配' },
+      { name: '轧盖工位', spec: '轧盖接口+无菌操作手套', qty: '1', unit: '套', remark: '轧盖机客户自备或另行选配' },
+      { name: '称重工位', spec: '在线称重接口+手套', qty: '1', unit: '套', remark: '' },
+      { name: '传送系统', spec: '洁净级传送带，316L材质', qty: '1', unit: '套', remark: '' },
+      { name: '缓冲区/鼠洞', spec: '工位间气流隔离过渡段', qty: '2', unit: '处', remark: '' },
+      { name: 'HMI系统', spec: '15寸触摸屏+SCADA基础版', qty: '1', unit: '套', remark: '含中央PLC' },
+      { name: '压差监测系统', spec: '多区压差传感器+显示+报警', qty: '1', unit: '套', remark: '' },
+      { name: '环境监测接口', spec: '各工位采样口预留', qty: '6', unit: '个', remark: '' },
+      { name: '手套系统', spec: 'ISO 14644-7标准手套及接口', qty: '8', unit: '只', remark: '各工位分配' },
+      { name: '报警系统', spec: '全线声光报警+联锁保护', qty: '1', unit: '套', remark: '' },
+      { name: '公用工程接口', spec: '电源、压缩空气、VHP管路', qty: '1', unit: '套', remark: '' },
+      { name: '文件包', spec: '操作手册、图纸、验证方案、备件清单', qty: '1', unit: '套', remark: '' }
+    ],
+    negative: [
+      { name: '负压隔离器舱体', spec: '316L不锈钢焊接舱体，Ra≤0.4μm，加强气密设计', qty: '1', unit: '套', remark: '含视窗、照明' },
+      { name: '排风系统', spec: '变频排风机+双重HEPA(≥99.995%)', qty: '1', unit: '套', remark: '含备用排风机' },
+      { name: 'BIBO更换装置', spec: '袋进袋出安全更换排风HEPA', qty: '1', unit: '套', remark: '' },
+      { name: '气闸缓冲舱', spec: '单气闸，压差梯度控制', qty: '1', unit: '套', remark: '' },
+      { name: 'WIP在线清洗', spec: '手动WIP喷球+收集槽', qty: '1', unit: '套', remark: '' },
+      { name: '手套系统', spec: 'ISO 14644-7标准手套及接口', qty: '4', unit: '只', remark: '' },
+      { name: '压差监测', spec: '负压传感器+数字显示+报警', qty: '1', unit: '套', remark: '' },
+      { name: '毒性监测口', spec: '排风口预留毒性物质监测接口', qty: '1', unit: '个', remark: '' },
+      { name: 'HMI系统', spec: '10寸工业触摸屏+PLC', qty: '1', unit: '套', remark: '' },
+      { name: '报警系统', spec: '负压异常/VHP泄漏/过滤器堵塞报警', qty: '1', unit: '套', remark: '' },
+      { name: '门系统', spec: '气密门+安全联锁+气闸互锁', qty: '3', unit: '扇', remark: '' },
+      { name: '不锈钢工作台', spec: '316L不锈钢，可拆卸清洗', qty: '1', unit: '件', remark: '' },
+      { name: '清洗废液收集', spec: '密闭收集罐+排液阀', qty: '1', unit: '套', remark: '' },
+      { name: '公用工程接口', spec: '电源、压缩空气、纯化水接口', qty: '1', unit: '套', remark: '' },
+      { name: '文件包', spec: '操作手册、图纸、验证方案、OEL评估报告', qty: '1', unit: '套', remark: '' }
+    ]
+  };
+  return configs[type] || configs.sterile;
+}
+
+// ---- Advanced Config ----
+function getAdvancedConfig(type, isPremium) {
+  const configs = {
+    sterile: [
+      { name: '隔离器舱体(增强)', spec: '316L不锈钢焊接舱体，加大尺寸，Ra≤0.4μm', qty: '1', unit: '套', remark: '含大面积视窗' },
+      { name: '送风系统(冗余)', spec: '双变频风机(一用一备)+HEPA', qty: '1', unit: '套', remark: '自动切换' },
+      { name: 'VHP灭菌系统(增强)', spec: '大容量VHP发生器+多点喷射', qty: '1', unit: '套', remark: '' },
+      { name: '无菌手套(6只)', spec: 'ISO 14644-7标准手套+自动检漏系统', qty: '6', unit: '只', remark: '' },
+      { name: 'RTP+传递窗', spec: 'RTP快速转移+VHP传递窗双通道', qty: '2', unit: '套', remark: '' },
+      { name: 'SCADA系统', spec: '15寸触摸屏+SCADA+分布式PLC', qty: '1', unit: '套', remark: '21 CFR Part 11合规' },
+      { name: '自动手套检漏', spec: '压力衰减法手套完整性检测', qty: '1', unit: '套', remark: '' },
+      { name: '在线环境监测', spec: '粒子计数器+微生物采样器集成', qty: '1', unit: '套', remark: '' },
+      { name: 'EBR接口', spec: '电子批记录数据接口+MES集成', qty: '1', unit: '套', remark: '' },
+      { name: 'UPS不间断电源', spec: '在线式UPS，续航≥30min', qty: '1', unit: '台', remark: '控制系统供电' },
+      { name: '冗余PLC', spec: '主PLC+热备PLC', qty: '1', unit: '套', remark: '' },
+      { name: '视频监控系统', spec: '舱内高清摄像头+录像', qty: '2', unit: '只', remark: '' },
+      { name: '电气控制系统(增强)', spec: '工业级控制柜+防尘散热', qty: '1', unit: '套', remark: '' },
+      { name: '远程诊断接口', spec: 'VPN远程接入诊断功能', qty: '1', unit: '套', remark: '' },
+      { name: '增强文件包', spec: '全套文件+3D模型+备件优化清单', qty: '1', unit: '套', remark: '' }
+    ],
+    vhp: [
+      { name: '传递窗舱体(加大)', spec: '316L不锈钢加大舱体，Ra≤0.4μm', qty: '1', unit: '套', remark: '' },
+      { name: 'VHP发生器(增强)', spec: '大容量VHP发生器，浓度2~8ml/m³', qty: '1', unit: '套', remark: '' },
+      { name: '催化分解器(双级)', spec: '双级催化分解，出口<1ppm', qty: '1', unit: '套', remark: '' },
+      { name: '三重互锁系统', spec: '机械+电气+PLC三重联锁', qty: '1', unit: '套', remark: '' },
+      { name: 'HEPA过滤器(增强)', spec: '送排风HEPA+在线扫描检漏口', qty: '2', unit: '只', remark: '' },
+      { name: 'SCADA控制系统', spec: 'PLC+SCADA+10寸触摸屏', qty: '1', unit: '套', remark: '21 CFR Part 11合规' },
+      { name: '审计追踪系统', spec: '完整审计追踪+电子签名', qty: '1', unit: '套', remark: '' },
+      { name: '在线H₂O₂监测(双)', spec: '舱内+排风口双浓度监测', qty: '2', unit: '只', remark: '' },
+      { name: '温湿度控制', spec: '舱内温湿度调节系统', qty: '1', unit: '套', remark: '' },
+      { name: '生物指示剂放置架', spec: '标准BI放置位', qty: '6', unit: '个', remark: '' },
+      { name: '不锈钢搁架(可调)', spec: '316L不锈钢，4层可调', qty: '4', unit: '层', remark: '' },
+      { name: '视频监控系统', spec: '舱内摄像头+录像', qty: '1', unit: '只', remark: '' },
+      { name: 'UPS不间断电源', spec: '在线式UPS，续航≥20min', qty: '1', unit: '台', remark: '' },
+      { name: '远程诊断接口', spec: 'VPN远程接入', qty: '1', unit: '套', remark: '' },
+      { name: '增强文件包', spec: '全套文件+3D模型+验证模板', qty: '1', unit: '套', remark: '' }
+    ],
+    integrated: [
+      { name: '全线隔离器舱体(增强)', spec: '316L不锈钢加大舱体，Ra≤0.4μm', qty: '1', unit: '套', remark: '含4-5工位' },
+      { name: '送风系统(冗余)', spec: '双变频风机(一用一备)+分区HEPA', qty: '1', unit: '套', remark: '' },
+      { name: '全线VHP一体化灭菌', spec: '大容量VHP+多点喷射+全线覆盖', qty: '1', unit: '套', remark: '' },
+      { name: '多工位手套(10只)', spec: 'ISO 14644-7标准手套+自动检漏', qty: '10', unit: '只', remark: '' },
+      { name: '传送系统(增强)', spec: '传送带+推杆组合系统', qty: '1', unit: '套', remark: '' },
+      { name: '在线称重W&Q系统', spec: '集成称重+数据采集', qty: '1', unit: '套', remark: '' },
+      { name: 'SCADA+MES接口', spec: '中央SCADA+分布式PLC+EBR/MES', qty: '1', unit: '套', remark: '21 CFR Part 11' },
+      { name: '全线环境监测', spec: '各工位在线粒子+微生物监测', qty: '1', unit: '套', remark: '' },
+      { name: '自动手套检漏', spec: '压力衰减法检测系统', qty: '1', unit: '套', remark: '' },
+      { name: 'UPS+冗余PLC', spec: '在线式UPS+热备PLC', qty: '1', unit: '套', remark: '' },
+      { name: '视频监控系统', spec: '各工位高清摄像头+录像', qty: '4', unit: '只', remark: '' },
+      { name: '缓冲区(增强)', spec: '双鼠洞+压差梯度控制', qty: '2', unit: '处', remark: '' },
+      { name: '远程诊断', spec: 'VPN远程接入+预测性维护', qty: '1', unit: '套', remark: '' },
+      { name: '电子批记录', spec: 'EBR完整方案+MES数据映射', qty: '1', unit: '套', remark: '' },
+      { name: '增强文件包', spec: '全套文件+3D+BIM模型+验证模板', qty: '1', unit: '套', remark: '' }
+    ],
+    negative: [
+      { name: '负压舱体(增强)', spec: '316L不锈钢加大舱体，加强气密Ra≤0.4μm', qty: '1', unit: '套', remark: '' },
+      { name: '排风系统(冗余)', spec: '双排风机(一用一备)+双重HEPA', qty: '1', unit: '套', remark: '自动切换' },
+      { name: 'BIBO+自动密封阀', spec: '袋进袋出+气动密封阀', qty: '1', unit: '套', remark: '' },
+      { name: '双气闸缓冲', spec: '进/出双气闸，压差梯度控制', qty: '2', unit: '套', remark: '' },
+      { name: '全自动WIP', spec: '旋转喷球+清洗程序自动控制', qty: '1', unit: '套', remark: '' },
+      { name: '手套+半身服接口', spec: '4只手套+2个半身服接口', qty: '1', unit: '套', remark: '' },
+      { name: '在线毒性残留监测', spec: '排风口H₂O₂/毒性物质在线监测仪', qty: '1', unit: '套', remark: '' },
+      { name: 'HEPA在线扫描检漏', spec: '排风HEPA自动扫描检漏系统', qty: '1', unit: '套', remark: '' },
+      { name: 'SCADA系统', spec: '15寸触摸屏+SCADA+PLC', qty: '1', unit: '套', remark: '21 CFR Part 11' },
+      { name: '冗余排风+UPS', spec: '备用排风机+在线式UPS', qty: '1', unit: '套', remark: '' },
+      { name: '紧急排风联动', spec: '主风机故障自动切换+声光报警', qty: '1', unit: '套', remark: '' },
+      { name: '视频监控系统', spec: '舱内高清摄像头+录像', qty: '2', unit: '只', remark: '' },
+      { name: '废液密闭收集(增强)', spec: '大容量密闭收集罐+在线液位监测', qty: '1', unit: '套', remark: '' },
+      { name: '远程诊断接口', spec: 'VPN远程接入+预测性维护', qty: '1', unit: '套', remark: '' },
+      { name: '增强文件包', spec: '全套文件+OEL评估+3D模型', qty: '1', unit: '套', remark: '' }
+    ]
+  };
+  return configs[type] || configs.sterile;
+}
+
+// ---- Comparison Matrix ----
+function getComparisonMatrix(type) {
+  const matrices = {
+    sterile: [
+      { name: '正压隔离运行', standard: true, premium: true },
+      { name: 'ISO 5级洁净环境', standard: true, premium: true },
+      { name: 'VHP灭菌系统', standard: true, premium: true, premiumNote: '(大容量)' },
+      { name: '手套数量', standard: true, standardNote: '4只', premium: true, premiumNote: '6只' },
+      { name: '自动手套检漏系统', standard: false, premium: true },
+      { name: 'RTP快速转移端口', standard: true, premium: true },
+      { name: 'VHP传递窗', standard: false, premium: true },
+      { name: '21 CFR Part 11合规SCADA', standard: false, premium: true },
+      { name: '在线环境监测系统集成', standard: false, premium: true },
+      { name: 'EBR电子批记录接口', standard: false, premium: true },
+      { name: '冗余风机/PLC配置', standard: false, premium: true },
+      { name: 'UPS不间断电源', standard: false, premium: true }
+    ],
+    vhp: [
+      { name: 'VHP灭菌循环可编程', standard: true, premium: true },
+      { name: '双门互锁安全系统', standard: true, premium: true, premiumNote: '(三重)' },
+      { name: 'SAL 10⁻⁶灭菌效果', standard: true, premium: true },
+      { name: '催化分解残气<1ppm', standard: true, premium: true, premiumNote: '(双级)' },
+      { name: '21 CFR Part 11审计追踪', standard: false, premium: true },
+      { name: '在线H₂O₂双浓度监测', standard: false, premium: true },
+      { name: 'HEPA在线扫描检漏', standard: false, premium: true },
+      { name: '温湿度控制系统', standard: false, premium: true },
+      { name: '视频监控', standard: false, premium: true },
+      { name: 'UPS不间断电源', standard: false, premium: true },
+      { name: '远程诊断接口', standard: false, premium: true },
+      { name: '加大舱体尺寸', standard: false, premium: true }
+    ],
+    integrated: [
+      { name: '多工位联动控制', standard: true, premium: true, premiumNote: '(4-5工位)' },
+      { name: '全线VHP灭菌', standard: true, standardNote: '分区', premium: true, premiumNote: '一体化' },
+      { name: '洁净传送系统', standard: true, premium: true, premiumNote: '(带+推杆)' },
+      { name: '在线称重W&Q', standard: false, premium: true },
+      { name: 'EBR/MES集成接口', standard: false, premium: true },
+      { name: '全线在线环境监测', standard: false, premium: true },
+      { name: '自动手套检漏', standard: false, premium: true },
+      { name: '冗余风机/PLC', standard: false, premium: true },
+      { name: 'UPS不间断电源', standard: false, premium: true },
+      { name: '视频监控系统', standard: false, premium: true },
+      { name: '远程诊断+预测性维护', standard: false, premium: true },
+      { name: '全线ISO 5级(含背景区)', standard: false, premium: true }
+    ],
+    negative: [
+      { name: '负压隔离运行', standard: true, premium: true },
+      { name: 'OEL<1μg/m³控制', standard: true, premium: true, premiumNote: '(<0.1μg/m³)' },
+      { name: '双重HEPA排风过滤', standard: true, premium: true },
+      { name: 'BIBO安全更换', standard: true, premium: true, premiumNote: '(+自动密封阀)' },
+      { name: '全自动WIP清洗', standard: false, premium: true },
+      { name: '在线毒性残留监测', standard: false, premium: true },
+      { name: 'HEPA在线扫描检漏', standard: false, premium: true },
+      { name: '半身服操作接口', standard: false, premium: true },
+      { name: '双气闸缓冲舱', standard: false, premium: true },
+      { name: '冗余排风系统+UPS', standard: false, premium: true },
+      { name: '21 CFR Part 11合规SCADA', standard: false, premium: true },
+      { name: '视频监控+远程诊断', standard: false, premium: true }
+    ]
+  };
+  return matrices[type] || matrices.sterile;
+}
+
+// ---- Copy & Print ----
+function copyDoc() {
+  const tabId = state.currentTab === 'urs' ? 'ursContent' : (state.currentTab === 'quote' ? 'quoteContent' : 'templatesContent');
+  const content = document.getElementById(tabId);
+  const range = document.createRange();
+  range.selectNodeContents(content);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  try {
+    document.execCommand('copy');
+    showToast('文档内容已复制到剪贴板', 'success');
+  } catch (e) {
+    showToast('复制失败，请手动选择复制', 'error');
+  }
+  sel.removeAllRanges();
+}
+
+function printDoc() {
+  window.print();
+}
+
+// ============================================================================
+// DATA PERSISTENCE LAYER - DB Object
+// ============================================================================
+
+const DB = {
+  // ---- Customers ----
+  getCustomers() {
+    return JSON.parse(localStorage.getItem('isolator_customers') || '[]');
+  },
+  saveCustomer(customer) {
+    const list = this.getCustomers();
+    const idx = list.findIndex(c => c.name === customer.name);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...customer, id: list[idx].id };
+    } else {
+      customer.id = this.genId();
+      customer.createdAt = new Date().toISOString();
+      list.push(customer);
+    }
+    localStorage.setItem('isolator_customers', JSON.stringify(list));
+    return customer;
+  },
+  deleteCustomer(id) {
+    const list = this.getCustomers().filter(c => c.id !== id);
+    localStorage.setItem('isolator_customers', JSON.stringify(list));
+  },
+
+  // ---- Quotations ----
+  getQuotations() {
+    return JSON.parse(localStorage.getItem('isolator_quotations') || '[]');
+  },
+  saveQuotation(quotation) {
+    const list = this.getQuotations();
+    const idx = list.findIndex(q => q.id === quotation.id);
+    if (idx >= 0) {
+      list[idx] = quotation;
+    } else {
+      quotation.id = this.genId();
+      quotation.createdAt = new Date().toISOString();
+      list.unshift(quotation);
+    }
+    localStorage.setItem('isolator_quotations', JSON.stringify(list));
+    return quotation;
+  },
+  deleteQuotation(id) {
+    const list = this.getQuotations().filter(q => q.id !== id);
+    localStorage.setItem('isolator_quotations', JSON.stringify(list));
+  },
+
+  // ---- Templates ----
+  getTemplates() {
+    return JSON.parse(localStorage.getItem('isolator_templates') || '[]');
+  },
+  saveTemplate(template) {
+    const list = this.getTemplates();
+    const idx = list.findIndex(t => t.id === template.id);
+    if (idx >= 0) {
+      list[idx] = template;
+    } else {
+      template.id = this.genId();
+      template.createdAt = new Date().toISOString();
+      list.unshift(template);
+    }
+    localStorage.setItem('isolator_templates', JSON.stringify(list));
+    return template;
+  },
+  deleteTemplate(id) {
+    const list = this.getTemplates().filter(t => t.id !== id);
+    localStorage.setItem('isolator_templates', JSON.stringify(list));
+  },
+
+  // ---- Generate unique ID ----
+  genId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  }
+};
+
+// ============================================================================
+// TOAST NOTIFICATION
+// ============================================================================
+
+function showToast(msg, type) {
+  type = type || 'success';
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3000);
+}
+
+// ============================================================================
+// PRESET TEMPLATES
+// ============================================================================
+
+const PRESET_TEMPLATES = [
+  {
+    name: '标准无菌隔离器询盘',
+    category: 'sterile',
+    ursText: '1. 设备需满足无菌隔离要求，正压运行\n2. 操作区洁净度ISO 5级\n3. VHP灭菌，灭菌效果≥6-log\n4. 配备手套检漏系统\n5. 操作区尺寸不小于L1200×D800×H900mm\n6. 需满足中国GMP及EU GMP Annex 1要求\n7. 配备RTP快速转移端口\n8. HMI人机界面，支持21 CFR Part 11\n9. 需提供IQ/OQ/PQ验证文件包',
+    equipTypes: ['sterile'],
+    regulations: ['cn_gmp', 'eu_gmp'],
+    budgetLevel: 'standard'
+  },
+  {
+    name: 'VHP传递窗询盘',
+    category: 'vhp',
+    ursText: '1. VHP灭菌传递窗，双门互锁\n2. 灭菌循环可调（浓度、时间、温度）\n3. 灭菌效果≥6-log SAL\n4. VHP残气排除至<1ppm\n5. 内腔尺寸不小于L800×W800×H900mm\n6. 满足中国GMP要求\n7. 配备BI生物指示剂验证接口\n8. 审计追踪功能',
+    equipTypes: ['vhp'],
+    regulations: ['cn_gmp'],
+    budgetLevel: 'standard'
+  },
+  {
+    name: '负压隔离器询盘（高活性药品）',
+    category: 'negative',
+    ursText: '1. 负压隔离器，用于高活性药品操作\n2. OEL控制目标<1μg/m³\n3. 双重HEPA排风过滤，在线扫描检漏\n4. 袋进袋出(BIBO)过滤器更换\n5. 工作区尺寸L1500×D900×H900mm\n6. WIP在线清洗系统\n7. 满足中国GMP及FDA 21 CFR Part 211\n8. 气闸缓冲设计\n9. 毒性残留实时监测',
+    equipTypes: ['negative'],
+    regulations: ['cn_gmp', 'fda'],
+    budgetLevel: 'premium'
+  }
+];
+
+function initPresetTemplates() {
+  const existing = DB.getTemplates();
+  if (existing.length === 0) {
+    for (const pt of PRESET_TEMPLATES) {
+      const tpl = {
+        id: DB.genId(),
+        name: pt.name,
+        category: pt.category,
+        ursText: pt.ursText,
+        equipTypes: pt.equipTypes,
+        regulations: pt.regulations,
+        budgetLevel: pt.budgetLevel,
+        createdAt: new Date().toISOString()
+      };
+      DB.saveTemplate(tpl);
+    }
+  }
+}
+
+// ============================================================================
+// SAVE AS QUOTATION
+// ============================================================================
+
+function saveAsQuotation() {
+  const customerName = document.getElementById('customerName').value.trim();
+  const projectName = document.getElementById('projectName').value.trim();
+  const contactPerson = document.getElementById('contactPerson').value.trim();
+  const docDate = document.getElementById('docDate').value || formatDate();
+  const ursText = document.getElementById('ursInput').value.trim();
+  const equipTypes = getSelectedEquipTypes();
+  const budgetLevel = document.getElementById('budgetLevel').value;
+  const regulations = getSelectedRegulations();
+
+  if (!customerName) {
+    showToast('请先填写客户名称', 'error');
+    return;
+  }
+  if (equipTypes.length === 0) {
+    showToast('请先选择设备类型', 'error');
+    return;
+  }
+
+  const quoteNo = generateQuoteNo();
+  const equipNames = equipTypes.map(function(t) { return EQUIP_TYPES[t].name; }).join(' / ');
+
+  // Calculate price totals
+  const primaryType = equipTypes[0];
+  const isPremium = budgetLevel === 'premium';
+  const priceKey = isPremium ? 'premium' : 'standard';
+  const basePrice = roundToTenThousand(randomInRange(PRICE_RANGES[primaryType][priceKey][0], PRICE_RANGES[primaryType][priceKey][1]));
+  const vhpPrice = primaryType === 'vhp' ? 0 : roundToTenThousand(basePrice * (isPremium ? 0.18 : 0.15));
+  const installPrice = roundToTenThousand(basePrice * (isPremium ? 0.08 : 0.06));
+  const validationPrice = roundToTenThousand(basePrice * (isPremium ? 0.10 : 0.07));
+  const trainingPrice = roundToTenThousand(basePrice * (isPremium ? 0.03 : 0.02));
+  const sparePartsPrice = roundToTenThousand(basePrice * (isPremium ? 0.04 : 0.03));
+  const docPackagePrice = roundToTenThousand(basePrice * (isPremium ? 0.03 : 0.02));
+  const shippingPrice = roundToTenThousand(basePrice * 0.03);
+  const totalStd = basePrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationPrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+  const monitorSystem = isPremium ? roundToTenThousand(basePrice * 0.12) : 0;
+  const ebrInterface = isPremium ? roundToTenThousand(basePrice * 0.06) : 0;
+  const redundantConfig = isPremium ? roundToTenThousand(basePrice * 0.08) : 0;
+  const totalAdv = totalStd + monitorSystem + ebrInterface + redundantConfig;
+
+  const quotation = {
+    quoteNo: quoteNo,
+    customerName: customerName,
+    projectName: projectName,
+    contactPerson: contactPerson,
+    equipTypes: equipTypes,
+    budgetLevel: budgetLevel,
+    regulations: regulations,
+    ursText: ursText,
+    date: docDate,
+    totalStd: totalStd,
+    totalAdv: totalAdv,
+    equipNames: equipNames,
+    supplierName: document.getElementById('supplierName').value.trim()
+  };
+
+  DB.saveQuotation(quotation);
+
+  // Auto-save customer
+  if (customerName) {
+    const existCust = DB.getCustomers().find(function(c) { return c.name === customerName; });
+    DB.saveCustomer({
+      id: existCust ? existCust.id : undefined,
+      name: customerName,
+      contact: contactPerson,
+      date: docDate
+    });
+  }
+
+  // Hide save prompt bar
+  document.getElementById('savePromptBar').style.display = 'none';
+
+  showToast('报价单已保存', 'success');
+  refreshQuotationList();
+  refreshCustomerList();
+  refreshTemplateSelect();
+  refreshCustomerSelect();
+}
+
+// ============================================================================
+// SAVE AS TEMPLATE
+// ============================================================================
+
+function saveAsTemplate() {
+  const ursText = document.getElementById('ursInput').value.trim();
+  if (!ursText) {
+    showToast('请先输入URS内容', 'error');
+    return;
+  }
+
+  const nameInput = document.getElementById('templateNameInput');
+  let tplName = nameInput.value.trim();
+  if (!tplName) {
+    tplName = '模板 - ' + formatDate() + ' ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  const equipTypes = getSelectedEquipTypes();
+  const regulations = getSelectedRegulations();
+  const budgetLevel = document.getElementById('budgetLevel').value;
+  const primaryType = equipTypes.length > 0 ? equipTypes[0] : 'sterile';
+
+  const template = {
+    name: tplName,
+    category: primaryType,
+    ursText: ursText,
+    equipTypes: equipTypes,
+    regulations: regulations,
+    budgetLevel: budgetLevel,
+    params: getCurrentParams()
+  };
+
+  DB.saveTemplate(template);
+  nameInput.value = '';
+  showToast('模板已保存', 'success');
+  refreshTemplateGrid();
+  refreshTemplateSelect();
+}
+
+// ============================================================================
+// LOAD TEMPLATE
+// ============================================================================
+
+function loadTemplate(templateId) {
+  if (!templateId) return;
+  const templates = DB.getTemplates();
+  const tpl = templates.find(function(t) { return t.id === templateId; });
+  if (!tpl) return;
+
+  // Fill URS
+  document.getElementById('ursInput').value = tpl.ursText || '';
+
+  // Fill equip types
+  document.querySelectorAll('.equip-cb').forEach(function(cb) {
+    cb.checked = (tpl.equipTypes || []).indexOf(cb.value) >= 0;
+  });
+  updateEquipTypeDisplay();
+
+  // Fill regulations
+  document.querySelectorAll('.reg-cb').forEach(function(cb) {
+    cb.checked = (tpl.regulations || []).indexOf(cb.value) >= 0;
+  });
+
+  // Fill budget level
+  if (tpl.budgetLevel) {
+    document.getElementById('budgetLevel').value = tpl.budgetLevel;
+  }
+
+  // Clear parse result
+  document.getElementById('parseResult').style.display = 'none';
+  document.getElementById('parseResult').innerHTML = '';
+
+  // Reset select
+  document.getElementById('loadTemplateSelect').value = '';
+
+  showToast('模板已加载', 'info');
+}
+
+// ============================================================================
+// LOAD CUSTOMER
+// ============================================================================
+
+function loadCustomer(customerId) {
+  if (!customerId) return;
+  const customers = DB.getCustomers();
+  const cust = customers.find(function(c) { return c.id === customerId; });
+  if (!cust) return;
+
+  document.getElementById('customerName').value = cust.name || '';
+  document.getElementById('contactPerson').value = cust.contact || '';
+
+  // Reset select
+  document.getElementById('loadCustomerSelect').value = '';
+
+  showToast('客户信息已加载', 'info');
+}
+
+// ============================================================================
+// LOAD QUOTATION (View)
+// ============================================================================
+
+function viewQuotation(quoteId) {
+  const quotations = DB.getQuotations();
+  const q = quotations.find(function(item) { return item.id === quoteId; });
+  if (!q) return;
+
+  // Fill all fields
+  document.getElementById('customerName').value = q.customerName || '';
+  document.getElementById('projectName').value = q.projectName || '';
+  document.getElementById('contactPerson').value = q.contactPerson || '';
+  document.getElementById('docDate').value = q.date || '';
+  document.getElementById('supplierName').value = q.supplierName || 'XX隔离器技术有限公司';
+  document.getElementById('ursInput').value = q.ursText || '';
+  document.getElementById('budgetLevel').value = q.budgetLevel || 'standard';
+
+  // Fill equip types
+  document.querySelectorAll('.equip-cb').forEach(function(cb) {
+    cb.checked = (q.equipTypes || []).indexOf(cb.value) >= 0;
+  });
+  updateEquipTypeDisplay();
+
+  // Fill regulations
+  document.querySelectorAll('.reg-cb').forEach(function(cb) {
+    cb.checked = (q.regulations || []).indexOf(cb.value) >= 0;
+  });
+
+  // Auto generate
+  showToast('报价数据已加载，正在重新生成...', 'info');
+  setTimeout(function() { generateDocs(); }, 300);
+}
+
+// ============================================================================
+// DELETE QUOTATION
+// ============================================================================
+
+function deleteQuotation(quoteId) {
+  if (!confirm('确定要删除此报价单吗？')) return;
+  DB.deleteQuotation(quoteId);
+  showToast('报价单已删除', 'info');
+  refreshQuotationList();
+  refreshCustomerList();
+}
+
+// ============================================================================
+// DELETE TEMPLATE
+// ============================================================================
+
+function deleteTemplateFromCard(templateId) {
+  if (!confirm('确定要删除此模板吗？')) return;
+  DB.deleteTemplate(templateId);
+  showToast('模板已删除', 'info');
+  refreshTemplateGrid();
+  refreshTemplateSelect();
+}
+
+// ============================================================================
+// DELETE CUSTOMER
+// ============================================================================
+
+function deleteCustomerFromList(customerId) {
+  if (!confirm('确定要删除此客户吗？')) return;
+  DB.deleteCustomer(customerId);
+  showToast('客户已删除', 'info');
+  refreshCustomerList();
+  refreshCustomerSelect();
+}
+
+// ============================================================================
+// USE TEMPLATE FROM LIBRARY TAB
+// ============================================================================
+
+function useTemplateFromLib(templateId) {
+  loadTemplate(templateId);
+  // Switch to URS tab to show the loaded data
+  switchTab('urs');
+}
+
+// ============================================================================
+// REFRESH / RENDER FUNCTIONS
+// ============================================================================
+
+function refreshQuotationList() {
+  const quotations = DB.getQuotations();
+  const area = document.getElementById('quotationListArea');
+
+  if (quotations.length === 0) {
+    area.innerHTML = '<div class="empty-state">暂无历史报价单</div>';
+    return;
+  }
+
+  let html = '<div class="data-table-wrap"><table class="parse-table" style="font-size:0.72rem;">';
+  html += '<thead><tr><th>报价单编号</th><th>客户</th><th>项目</th><th>设备类型</th><th>标准方案</th><th>高级方案</th><th>日期</th><th>操作</th></tr></thead><tbody>';
+
+  for (const q of quotations) {
+    html += '<tr>';
+    html += '<td>' + (q.quoteNo || '-') + '</td>';
+    html += '<td>' + (q.customerName || '-') + '</td>';
+    html += '<td>' + (q.projectName || '-') + '</td>';
+    html += '<td>' + (q.equipNames || '-') + '</td>';
+    html += '<td>' + formatMoney(q.totalStd || 0) + '</td>';
+    html += '<td>' + formatMoney(q.totalAdv || 0) + '</td>';
+    html += '<td>' + (q.date || '-') + '</td>';
+    html += '<td>';
+    html += '<button class="btn-action-sm" onclick="viewQuotation(\'' + q.id + '\')">查看</button> ';
+    html += '<button class="btn-danger-sm" onclick="deleteQuotation(\'' + q.id + '\')">删除</button>';
+    html += '</td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+function refreshCustomerList() {
+  const customers = DB.getCustomers();
+  const quotations = DB.getQuotations();
+  const area = document.getElementById('customerListArea');
+
+  if (customers.length === 0) {
+    area.innerHTML = '<div class="empty-state">暂无客户记录</div>';
+    return;
+  }
+
+  let html = '<div class="data-table-wrap"><table class="parse-table" style="font-size:0.72rem;">';
+  html += '<thead><tr><th>客户名称</th><th>联系人</th><th>报价数</th><th>最近报价日期</th><th>操作</th></tr></thead><tbody>';
+
+  for (const c of customers) {
+    const custQuotes = quotations.filter(function(q) { return q.customerName === c.name; });
+    const quoteCount = custQuotes.length;
+    const lastDate = custQuotes.length > 0
+      ? custQuotes.reduce(function(latest, q) { return q.date > latest ? q.date : latest; }, custQuotes[0].date)
+      : (c.date || '-');
+
+    html += '<tr>';
+    html += '<td>' + (c.name || '-') + '</td>';
+    html += '<td>' + (c.contact || '-') + '</td>';
+    html += '<td>' + quoteCount + '</td>';
+    html += '<td>' + lastDate + '</td>';
+    html += '<td>';
+    html += '<button class="btn-action-sm" onclick="loadCustomer(\'' + c.id + '\')">加载</button> ';
+    html += '<button class="btn-danger-sm" onclick="deleteCustomerFromList(\'' + c.id + '\')">删除</button>';
+    html += '</td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+function refreshTemplateGrid() {
+  const templates = DB.getTemplates();
+  const grid = document.getElementById('templateGrid');
+
+  if (templates.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">暂无模板，点击"新建模板"或保存当前输入为模板</div>';
+    return;
+  }
+
+  let html = '';
+  for (const tpl of templates) {
+    const equipBadges = (tpl.equipTypes || []).map(function(et) {
+      const info = EQUIP_TYPES[et];
+      return info ? '<span class="equip-badge ' + info.badge + '">' + info.name + '</span>' : '';
+    }).join(' ');
+
+    const regNames = (tpl.regulations || []).map(function(r) {
+      return REGULATION_REFS[r] ? REGULATION_REFS[r].name : r;
+    }).join('、');
+
+    const preview = (tpl.ursText || '').substring(0, 100) + ((tpl.ursText || '').length > 100 ? '...' : '');
+    const createdStr = tpl.createdAt ? formatDate(new Date(tpl.createdAt)) : '-';
+
+    html += '<div class="template-card">';
+    html += '<h4>' + (tpl.name || '未命名模板') + '</h4>';
+    html += '<div class="template-meta">' + equipBadges + ' | ' + (regNames || '未指定法规') + ' | ' + createdStr + '</div>';
+    html += '<div class="template-preview">' + preview + '</div>';
+    html += '<div class="template-actions">';
+    html += '<button class="btn-action-sm" onclick="useTemplateFromLib(\'' + tpl.id + '\')">使用</button> ';
+    html += '<button class="btn-danger-sm" onclick="deleteTemplateFromCard(\'' + tpl.id + '\')">删除</button>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function refreshTemplateSelect() {
+  const templates = DB.getTemplates();
+  const sel = document.getElementById('loadTemplateSelect');
+  let html = '<option value="">-- 选择模板 --</option>';
+  for (const tpl of templates) {
+    html += '<option value="' + tpl.id + '">' + tpl.name + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+function refreshCustomerSelect() {
+  const customers = DB.getCustomers();
+  const sel = document.getElementById('loadCustomerSelect');
+  let html = '<option value="">-- 选择客户 --</option>';
+  for (const c of customers) {
+    html += '<option value="' + c.id + '">' + c.name + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Init preset templates
+  initPresetTemplates();
+
+  // Refresh all data views
+  refreshQuotationList();
+  refreshCustomerList();
+  refreshTemplateGrid();
+  refreshTemplateSelect();
+  refreshCustomerSelect();
+});
+
+// ============================================================================
+// MOBILE RESPONSIVE - Panel Switch & Resize Handler
+// ============================================================================
+
+function showMobilePanel(panel) {
+  const left = document.getElementById('left-panel');
+  const right = document.getElementById('right-panel');
+  const btnInput = document.getElementById('mobile-nav-input');
+  const btnOutput = document.getElementById('mobile-nav-output');
+  if (panel === 'input') {
+    left.style.display = 'block';
+    right.style.display = 'none';
+    btnInput.classList.add('active');
+    btnOutput.classList.remove('active');
+  } else {
+    left.style.display = 'none';
+    right.style.display = 'block';
+    btnOutput.classList.add('active');
+    btnInput.classList.remove('active');
+  }
+}
+
+// Desktop: show both panels on resize
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    document.getElementById('left-panel').style.display = '';
+    document.getElementById('right-panel').style.display = '';
+  }
+});
+
+</script>
+  <!-- Mobile Bottom Navigation -->
+  <div id="mobile-nav">
+    <button onclick="showMobilePanel('input')" id="mobile-nav-input" class="active">📝 输入</button>
+    <button onclick="showMobilePanel('output')" id="mobile-nav-output">📄 文档</button>
+  </div>
+
+</body>
+</html>
