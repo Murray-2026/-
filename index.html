@@ -272,6 +272,12 @@
       background: var(--accent-green); transition: all 0.2s;
     }
     .save-prompt-bar .btn-sm:hover { filter: brightness(1.1); }
+    .save-prompt-bar .btn-sm-cancel {
+      padding: 4px 14px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; border: 1px solid #cbd5e0; color: #4a5568;
+      background: #fff; transition: all 0.2s;
+    }
+    .save-prompt-bar .btn-sm-cancel:hover { background: #edf2f7; color: #2d3748; }
     /* Template card */
     .template-card {
       background: #fff; border: 1px solid #e0e5ef; border-radius: 8px;
@@ -562,10 +568,14 @@
       <div id="savePromptBar" style="display:none;" class="save-prompt-bar">
         💾 是否保存此报价？
         <button class="btn-sm" onclick="saveAsQuotation()">保存</button>
+        <button class="btn-sm-cancel" onclick="dismissSavePrompt()">不保存</button>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:8px; padding-right:4px;">
         <button class="btn-outline" onclick="copyDoc()">
           📋 复制全文
+        </button>
+        <button class="btn-outline" onclick="exportDocx()">
+          📄 导出DOCX
         </button>
         <button class="btn-outline" onclick="printDoc()">
           🖨 打印/导出PDF
@@ -1388,6 +1398,10 @@ function generateDocs() {
   }, 600);
 }
 
+function dismissSavePrompt() {
+  document.getElementById('savePromptBar').style.display = 'none';
+}
+
 // ---- Render URS Reply ----
 function renderURSReply(replies, customer, project, supplier, date, regulations, equipTypes) {
   const regNames = regulations.map(r => REGULATION_REFS[r]?.name || r).join('、');
@@ -1841,6 +1855,91 @@ function copyDoc() {
 
 function printDoc() {
   window.print();
+}
+
+// ---- Export DOCX (Word-compatible HTML format) ----
+function exportDocx() {
+  var tab = state.currentTab;
+  var contentEl, filename;
+
+  if (tab === 'urs') {
+    contentEl = document.getElementById('ursContent');
+    filename = 'URS逐条回复.doc';
+  } else if (tab === 'quote') {
+    contentEl = document.getElementById('quoteContent');
+    filename = '快速报价单.doc';
+  } else {
+    showToast('请先切换到URS回复或报价单标签页', 'warning');
+    return;
+  }
+
+  // Check if content has been generated (no empty state)
+  if (!contentEl || contentEl.querySelector('[style*=\"text-align:center; padding:60px\"]')) {
+    showToast('请先生成文档后再导出', 'warning');
+    return;
+  }
+
+  // Collect all styles from the page
+  var styles = document.querySelectorAll('style');
+  var styleContent = '';
+  styles.forEach(function(s) { styleContent += s.outerHTML; });
+
+  // Clone content and fix table scroll wrappers for Word
+  var clone = contentEl.cloneNode(true);
+
+  // Remove scroll wrappers so tables render fully in Word
+  var wrappers = clone.querySelectorAll('.table-scroll-wrap');
+  wrappers.forEach(function(w) {
+    var parent = w.parentNode;
+    while (w.firstChild) { parent.insertBefore(w.firstChild, w); }
+    parent.removeChild(w);
+  });
+
+  // Build a complete Word-compatible HTML document
+  var html = '<!DOCTYPE html>\n' +
+    '<html xmlns:o="urn:schemas-microsoft-com:office:office"\n' +
+    '      xmlns:w="urn:schemas-microsoft-com:office:word"\n' +
+    '      xmlns="http://www.w3.org/TR/REC-html40">\n' +
+    '<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n' +
+    '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->\n' +
+    styleContent + '\n' +
+    '<style>\n' +
+    '  @page { size: A4; margin: 2cm; }\n' +
+    '  body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: #1a2233; line-height: 1.7; }\n' +
+    '  .confidential-bar { background: #f0f4ff; border: 1px solid #1e3a5f; padding: 6px 12px; font-size: 0.7rem; margin-bottom: 12px; text-align: center; }\n' +
+    '  table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }\n' +
+    '  .parse-table td, .urs-table td, .urs-table th, .quote-table td, .quote-table th { padding: 5px 8px; border: 1px solid #cbd5e0; font-size: 0.75rem; }\n' +
+    '  .parse-table td:first-child { background: #f4f7fc; font-weight: 600; }\n' +
+    '  .urs-table thead th, .quote-table thead th { background: var(--primary, #1e3a5f); color: #fff; font-weight: 600; font-size: 0.7rem; text-align: center; }\n' +
+    '  .total-row td { background: #f4f7fc; font-weight: 700; }\n' +
+    '  h1 { font-size: 1.3rem; color: #1e3a5f; }\n' +
+    '  h2 { font-size: 1rem; color: #1e3a5f; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 16px; }\n' +
+    '  h3 { font-size: 0.88rem; color: #2a4f80; }\n' +
+    '  .tag-comply { display: inline-block; background: #c6f6d5; color: #22543d; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: 600; }\n' +
+    '  .tag-partial { display: inline-block; background: #fefcbf; color: #744210; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: 600; }\n' +
+    '  .tag-na { display: inline-block; background: #e2e8f0; color: #4a5568; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: 600; }\n' +
+    '  .tag-supplement { display: inline-block; background: #bee3f8; color: #2a4365; padding: 2px 6px; border-radius: 3px; font-size: 0.6rem; font-weight: 600; }\n' +
+    '  hr { border: none; border-top: 1px solid #e2e8f0; margin: 12px 0; }\n' +
+    '  p { font-size: 0.75rem; line-height: 1.7; margin: 6px 0; }\n' +
+    '</style>\n' +
+    '</head>\n' +
+    '<body>' + clone.innerHTML + '</body>\n' +
+    '</html>';
+
+  // Create blob and trigger download
+  var blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast('文档已导出为Word格式', 'success');
 }
 
 // ============================================================================
