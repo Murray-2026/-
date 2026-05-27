@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>隔离器售前文档生成系统</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/docx@7.8.3/build/index.umd.js"></script>
   <style>
     :root {
       --primary: #1e3a5f;
@@ -632,7 +633,58 @@ const state = {
   parsedParams: {},
   parsedRequirements: [],
   ursReplies: [],
-  currentTab: 'urs'
+  currentTab: 'urs',
+  lastDocData: { urs: null, quote: null }
+};
+
+// ---- DOCX Generation Constants ----
+var DOCX = {
+  COLORS: {
+    primary: '1e3a5f',
+    accentGold: 'c9a227',
+    accentGreen: '2e7d55',
+    white: 'FFFFFF',
+    black: '1a2233',
+    gray: '718096',
+    lightGray: 'f8fafc',
+    text: '1a2233',
+    textLight: '718096',
+    secondary: '2e7d55',
+    tableHeaderBg: '1e3a5f',
+    tableHeaderFg: 'FFFFFF',
+    rowAltBg: 'f8fafc',
+    confidentialBg: 'fff9e6',
+    totalRowBg: 'edf2f7',
+    labelBg: 'f4f7fc',
+    tagComplyBg: 'c6f6d5',
+    tagComplyFg: '22543d',
+    tagPartialBg: 'fefcbf',
+    tagPartialFg: '744210',
+    tagNABg: 'e2e8f0',
+    tagNAFg: '4a5568',
+    tagSupplementBg: 'bee3f8',
+    tagSupplementFg: '2a4365',
+    notesBg: 'fff9e6'
+  },
+  FONTS: { cn: 'Microsoft YaHei', en: 'Arial' },
+  MARGIN: 1440,
+  SIZE: {
+    h1: 36, h2: 28, h3: 24,
+    body: 20, bodyCN: 22, bodyEN: 20,
+    tableHeader: 18, tableBody: 18,
+    small: 16, tiny: 14, price: 20
+  },
+  pageSetup: function() {
+    return {
+      page: {
+        size: { width: 11906, height: 16838 },
+        margin: { top: DOCX.MARGIN, bottom: DOCX.MARGIN, left: DOCX.MARGIN, right: DOCX.MARGIN }
+      }
+    };
+  },
+  sp: function(before, after) {
+    return { before: before || 60, after: after || 60 };
+  }
 };
 
 // ---- Constants ----
@@ -1483,6 +1535,19 @@ function renderURSReply(replies, customer, project, supplier, date, regulations,
       </div>
     </div>`;
 
+  // Store structured URS data for DOCX export
+  state.lastDocData.urs = {
+    customer: customer, project: project, supplier: supplier, date: date,
+    equipNames: equipNames, regNames: regNames,
+    regulations: regulations,
+    replies: replies.map(function(r) { return {
+      id: r.id, originalText: r.originalText, category: r.category,
+      supplierResponse: r.supplierResponse, technicalNote: r.technicalNote,
+      regulationRef: r.regulationRef, remark: r.remark || '',
+      isSupplementary: r.isSupplementary || false
+    }; })
+  };
+
   container.innerHTML = html;
 }
 
@@ -1673,6 +1738,27 @@ function renderQuote(equipTypes, customer, project, supplier, date, regulations)
     </div>
   </div>`;
 
+  // Store structured Quote data for DOCX export
+  state.lastDocData.quote = {
+    quoteNo: quoteNo, customer: customer, project: project,
+    supplier: supplier, date: date, expiryDate: expiryDate,
+    primaryType: primaryType,
+    equipName: equipInfo.name, equipNameEN: equipInfo.en,
+    regNames: regNames,
+    overviewCN: getEquipmentOverviewCN(primaryType),
+    overviewEN: getEquipmentOverviewEN(primaryType),
+    systemDescCN: getSystemDescriptionCN(primaryType),
+    systemDescEN: getSystemDescriptionEN(primaryType),
+    techSpecs: techSpecs, configList: stdConfig,
+    prices: {
+      basePrice: basePrice, vhpPrice: vhpPrice, installPrice: installPrice,
+      validationPrice: validationPrice, trainingPrice: trainingPrice,
+      sparePartsPrice: sparePartsPrice, docPackagePrice: docPackagePrice,
+      shippingPrice: shippingPrice, totalPrice: totalPrice
+    },
+    isVHP: primaryType === 'vhp'
+  };
+
   container.innerHTML = html;
 }
 
@@ -1695,6 +1781,28 @@ function getSystemDescription(type) {
     negative: '[CN] 工作原理：变频排风机将工作区空气经双重HEPA过滤后排出，形成相对背景环境-10~-50Pa负压差，确保有毒物质不外泄。BIBO装置实现过滤器安全更换，操作人员无需接触污染过滤器。进出料经气闸缓冲舱进行，防止开舱时有毒物质逸出。WIP在线清洗系统自动冲洗舱体内壁，清洗废水密闭收集处理。毒性残留监测仪实时监控排风口浓度。<br/><br/>[EN] Operating Principle: A VFD-controlled exhaust fan draws work zone air through dual HEPA filtration, creating -10 to -50Pa negative pressure differential to contain toxic substances. BIBO devices enable safe filter changes without operator exposure. Material ingress/egress through airlock buffer chambers prevents toxic release during door opening. The WIP system automatically flushes internal surfaces with closed-circuit wastewater collection. Toxic residue monitors provide real-time exhaust concentration monitoring.'
   };
   return descriptions[type] || descriptions.sterile;
+}
+
+// ---- CN/EN Split Helpers for DOCX Export ----
+function getEquipmentOverviewCN(type) {
+  var text = getEquipmentOverview(type);
+  var idx = text.indexOf('[EN]');
+  return idx > 0 ? text.substring(0, idx).replace('[CN] ', '').replace(/<br\s*\/?>/gi, '').trim() : text;
+}
+function getEquipmentOverviewEN(type) {
+  var text = getEquipmentOverview(type);
+  var idx = text.indexOf('[EN]');
+  return idx > 0 ? text.substring(idx).replace('[EN] ', '').replace(/<br\s*\/?>/gi, '').trim() : '';
+}
+function getSystemDescriptionCN(type) {
+  var text = getSystemDescription(type);
+  var idx = text.indexOf('[EN]');
+  return idx > 0 ? text.substring(0, idx).replace('[CN] ', '').replace(/<br\s*\/?>/gi, '').trim() : text;
+}
+function getSystemDescriptionEN(type) {
+  var text = getSystemDescription(type);
+  var idx = text.indexOf('[EN]');
+  return idx > 0 ? text.substring(idx).replace('[EN] ', '').replace(/<br\s*\/?>/gi, '').trim() : '';
 }
 
 // ---- Tech Specs ----
@@ -1857,8 +1965,48 @@ function printDoc() {
   window.print();
 }
 
-// ---- Export DOCX (Word-compatible HTML format) ----
+// ---- Export DOCX (OOXML format via docx library) ----
 function exportDocx() {
+  var tab = state.currentTab;
+  if (!state.lastDocData || !state.lastDocData[tab]) {
+    exportDocxLegacy();
+    return;
+  }
+
+  var data = state.lastDocData[tab];
+  var filename = tab === 'urs' ? 'URS逐条回复.docx' : '快速报价单.docx';
+  var doc;
+
+  try {
+    if (tab === 'urs') {
+      doc = buildURSDocx(data);
+    } else {
+      doc = buildQuoteDocx(data);
+    }
+
+    docx.Packer.toBlob(doc).then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('文档已导出为DOCX格式', 'success');
+    }).catch(function(e) {
+      console.error('DOCX generation failed:', e);
+      showToast('DOCX生成失败，尝试HTML导出', 'warning');
+      exportDocxLegacy();
+    });
+  } catch (e) {
+    console.error('DOCX build failed:', e);
+    exportDocxLegacy();
+  }
+}
+
+// Legacy HTML-based export (Word-compatible fallback)
+function exportDocxLegacy() {
   var tab = state.currentTab;
   var contentEl, filename;
 
@@ -1873,21 +2021,16 @@ function exportDocx() {
     return;
   }
 
-  // Check if content has been generated (no empty state)
   if (!contentEl || contentEl.querySelector('[style*=\"text-align:center; padding:60px\"]')) {
     showToast('请先生成文档后再导出', 'warning');
     return;
   }
 
-  // Collect all styles from the page
   var styles = document.querySelectorAll('style');
   var styleContent = '';
   styles.forEach(function(s) { styleContent += s.outerHTML; });
 
-  // Clone content and fix table scroll wrappers for Word
   var clone = contentEl.cloneNode(true);
-
-  // Remove scroll wrappers so tables render fully in Word
   var wrappers = clone.querySelectorAll('.table-scroll-wrap');
   wrappers.forEach(function(w) {
     var parent = w.parentNode;
@@ -1895,19 +2038,18 @@ function exportDocx() {
     parent.removeChild(w);
   });
 
-  // Build a complete Word-compatible HTML document
   var html = '<!DOCTYPE html>\n' +
-    '<html xmlns:o="urn:schemas-microsoft-com:office:office"\n' +
-    '      xmlns:w="urn:schemas-microsoft-com:office:word"\n' +
-    '      xmlns="http://www.w3.org/TR/REC-html40">\n' +
+    '<html xmlns:o=\"urn:schemas-microsoft-com:office:office\"\n' +
+    '      xmlns:w=\"urn:schemas-microsoft-com:office:word\"\n' +
+    '      xmlns=\"http://www.w3.org/TR/REC-html40\">\n' +
     '<head>\n' +
-    '<meta charset="UTF-8">\n' +
-    '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n' +
+    '<meta charset=\"UTF-8\">\n' +
+    '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n' +
     '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->\n' +
     styleContent + '\n' +
     '<style>\n' +
     '  @page { size: A4; margin: 2cm; }\n' +
-    '  body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: #1a2233; line-height: 1.7; }\n' +
+    '  body { font-family: \"Microsoft YaHei\", \"PingFang SC\", Arial, sans-serif; color: #1a2233; line-height: 1.7; }\n' +
     '  .confidential-bar { background: #f0f4ff; border: 1px solid #1e3a5f; padding: 6px 12px; font-size: 0.7rem; margin-bottom: 12px; text-align: center; }\n' +
     '  table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }\n' +
     '  .parse-table td, .urs-table td, .urs-table th, .quote-table td, .quote-table th { padding: 5px 8px; border: 1px solid #cbd5e0; font-size: 0.75rem; }\n' +
@@ -1928,7 +2070,6 @@ function exportDocx() {
     '<body>' + clone.innerHTML + '</body>\n' +
     '</html>';
 
-  // Create blob and trigger download
   var blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
@@ -1939,7 +2080,600 @@ function exportDocx() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showToast('文档已导出为Word格式', 'success');
+  showToast('文档已导出为Word格式（HTML格式）', 'success');
+}
+
+
+// ============================================================================
+// DOCX BUILDER FUNCTIONS (OOXML via docx library)
+// ============================================================================
+
+function buildURSDocx(data) {
+  var children = [];
+
+  // Confidential bar
+  children.push(new docx.Paragraph({
+    alignment: docx.AlignmentType.CENTER,
+    spacing: { before: 0, after: 160 },
+    shading: { type: docx.ShadingType.SOLID, fill: "f0f4ff" },
+    border: {
+      top: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      left: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      right: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" }
+    },
+    children: [
+      new docx.TextRun({ text: "CONFIDENTIAL \u2014 ", bold: true, size: 18, font: DOCX.FONTS.en, color: DOCX.COLORS.primary }),
+      new docx.TextRun({ text: data.customer + " \u2014 " + data.project, size: 18, font: DOCX.FONTS.cn, color: DOCX.COLORS.primary })
+    ]
+  }));
+
+  // Title
+  children.push(new docx.Paragraph({
+    alignment: docx.AlignmentType.CENTER,
+    spacing: { before: 300, after: 400 },
+    children: [
+      new docx.TextRun({ text: "URS\u9010\u6761\u56de\u590d", bold: true, size: DOCX.SIZE.h1, font: DOCX.FONTS.cn, color: DOCX.COLORS.primary }),
+      new docx.TextRun({ text: " / ", size: DOCX.SIZE.h1, font: DOCX.FONTS.en, color: DOCX.COLORS.accentGold }),
+      new docx.TextRun({ text: "URS Clause-by-Clause Reply", bold: true, size: DOCX.SIZE.h1, font: DOCX.FONTS.en, color: DOCX.COLORS.primary })
+    ]
+  }));
+
+  // Info table
+  children.push(buildDocxInfoTable(data));
+
+  // Separator
+  children.push(buildDocxSeparator("URS Clause-by-Clause Reply"));
+
+  // Main URS table
+  children.push(buildURSDocxTable(data.replies));
+
+  // Regulation appendix
+  if (data.regulations && data.regulations.length > 0) {
+    children = children.concat(buildDocxRegAppendix(data.regulations));
+  }
+
+  // Signatures
+  children = children.concat(buildDocxSignatures());
+
+  return new docx.Document({
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 },
+          margin: { top: DOCX.MARGIN, bottom: DOCX.MARGIN, left: DOCX.MARGIN, right: DOCX.MARGIN }
+        }
+      },
+      children: children
+    }]
+  });
+}
+
+function buildQuoteDocx(data) {
+  var children = [];
+
+  // Section heading
+  children.push(new docx.Paragraph({
+    alignment: docx.AlignmentType.CENTER,
+    spacing: { before: 0, after: 80 },
+    shading: { type: docx.ShadingType.SOLID, fill: "f0f4ff" },
+    border: {
+      top: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      left: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" },
+      right: { style: docx.BorderStyle.SINGLE, size: 1, color: "1e3a5f" }
+    },
+    children: [
+      new docx.TextRun({ text: "CONFIDENTIAL / \u5546\u52a1\u4fdd\u5bc6", bold: true, size: 18, font: DOCX.FONTS.cn, color: DOCX.COLORS.primary })
+    ]
+  }));
+
+  // Title
+  children.push(new docx.Paragraph({
+    alignment: docx.AlignmentType.CENTER,
+    spacing: { before: 200, after: 380 },
+    children: [
+      new docx.TextRun({ text: data.equipName || "", bold: true, size: DOCX.SIZE.h1, font: DOCX.FONTS.cn, color: DOCX.COLORS.primary }),
+      new docx.TextRun({ text: " / ", size: DOCX.SIZE.h1, font: DOCX.FONTS.en, color: DOCX.COLORS.accentGold }),
+      new docx.TextRun({ text: (data.equipNameEN || ""), bold: true, size: DOCX.SIZE.h1, font: DOCX.FONTS.en, color: DOCX.COLORS.primary })
+    ]
+  }));
+
+  // Quote two-column info
+  children.push(buildQuoteTwoColTable(data));
+
+  // ===== Section A: Equipment Overview =====
+  children.push(buildDocxSeparator("A. Equipment Overview / \u8bbe\u5907\u6982\u8ff0"));
+  var overviewCN = data.overviewCN || getEquipmentOverviewCN(data.primaryType) || "";
+  var overviewEN = data.overviewEN || getEquipmentOverviewEN(data.primaryType) || "";
+  children = children.concat(buildDocxBilingualPara(overviewCN, overviewEN, docx.HeadingLevel.HEADING_2, DOCX.SIZE.h2));
+  var sysCN = data.systemDescCN || getSystemDescriptionCN(data.primaryType) || "";
+  var sysEN = data.systemDescEN || getSystemDescriptionEN(data.primaryType) || "";
+  children = children.concat(buildDocxBilingualPara(sysCN, sysEN, docx.HeadingLevel.HEADING_3, DOCX.SIZE.h3));
+
+  // ===== Section B: Configuration List =====
+  children.push(buildDocxSeparator("B. Configuration List / \u914d\u7f6e\u6e05\u5355"));
+  children.push(buildConfigDocxTable(data));
+
+  // ===== Section C: Price Breakdown =====
+  children.push(buildDocxSeparator("C. Price Breakdown / \u4ef7\u683c\u660e\u7ec6"));
+  children.push(buildPriceDocxTable(data));
+
+  // ===== Section D: Payment Terms =====
+  children.push(buildDocxSeparator("D. Payment Terms / \u4ed8\u6b3e\u6761\u4ef6"));
+  children.push(buildPaymentDocxTable(data));
+
+  // ===== Section E: Delivery =====
+  children.push(buildDocxSeparator("E. Delivery / \u4ea4\u8d27\u6761\u4ef6"));
+  children.push(buildDeliveryDocxTable(data));
+
+  // ===== Section F: After-Sales =====
+  children.push(buildDocxSeparator("F. After-Sales Service / \u552e\u540e\u670d\u52a1"));
+  children.push(buildAfterSalesDocxTable(data));
+
+  // ===== Section G: Compliance =====
+  children.push(buildDocxSeparator("G. Regulatory Compliance / \u6cd5\u89c4\u5408\u89c4"));
+  var regList = data.regNames || [];
+  var regItems = regList.map(function(r) {
+    return new docx.Paragraph({
+      spacing: { before: 40, after: 40 },
+      children: [new docx.TextRun({ text: "\u2713 " + r, size: 20, font: DOCX.FONTS.cn, color: DOCX.COLORS.text })],
+      bullet: { level: 0 }
+    });
+  });
+  children = children.concat(regItems);
+
+  // ===== Section H: Notes =====
+  children.push(buildDocxSeparator("H. Notes / \u5907\u6ce8"));
+  children.push(new docx.Paragraph({
+    spacing: { before: 80, after: 80 },
+    children: [new docx.TextRun({
+      text: "\u8be5\u62a5\u4ef7\u5355\u6709\u6548\u671f\u4e3a " + (data.expiryDate || "30") + " \u5929\u3002" +
+            " \u6240\u6709\u4ef7\u683c\u4e3a FOB/CIF \u62a5\u4ef7\uff0c\u4e0d\u542b\u5b89\u88c5\u8c03\u8bd5\u3002" +
+            " \u4ea7\u54c1\u89c4\u683c\u53ef\u80fd\u56e0\u6280\u672f\u5347\u7ea7\u800c\u8c03\u6574\uff0c\u6055\u4e0d\u53e6\u884c\u901a\u77e5\u3002",
+      size: 18, font: DOCX.FONTS.cn, color: DOCX.COLORS.textLight
+    })]
+  }));
+
+  // Signatures
+  children = children.concat(buildDocxSignatures());
+
+  return new docx.Document({
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 11906, height: 16838 },
+          margin: { top: DOCX.MARGIN, bottom: DOCX.MARGIN, left: DOCX.MARGIN, right: DOCX.MARGIN }
+        }
+      },
+      children: children
+    }]
+  });
+}
+
+// ---- Helper: Info Table (URS) ----
+function buildDocxInfoTable(data) {
+  var cellStyle = function(label, value) {
+    return [
+      makeDocxCell(label, 2000, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+      makeDocxCell(value, 7000, { align: docx.AlignmentType.LEFT })
+    ];
+  };
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: [
+      new docx.TableRow({ children: cellStyle("\u5ba2\u6237 Customer", data.customer) }),
+      new docx.TableRow({ children: cellStyle("\u9879\u76ee Project", data.project) }),
+      new docx.TableRow({ children: cellStyle("\u4f9b\u5e94\u5546 Supplier", data.supplier) }),
+      new docx.TableRow({ children: cellStyle("\u65e5\u671f Date", data.date) })
+    ]
+  });
+}
+
+// ---- Helper: Quote Two-Column Info Table ----
+function buildQuoteTwoColTable(data) {
+  var row = function(label, value) {
+    return new docx.TableRow({
+      children: [
+        makeDocxCell(label, 2200, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+        makeDocxCell(value, 6800, { align: docx.AlignmentType.LEFT })
+      ]
+    });
+  };
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: [
+      row("\u62a5\u4ef7\u5355\u53f7 Quote No.", data.quoteNo || ""),
+      row("\u5ba2\u6237 Customer", data.customer || ""),
+      row("\u9879\u76ee Project", data.project || ""),
+      row("\u4f9b\u5e94\u5546 Supplier", data.supplier || ""),
+      row("\u62a5\u4ef7\u65e5\u671f Date", data.date || ""),
+      row("\u6709\u6548\u671f Validity", (data.expiryDate || "30") + " days")
+    ]
+  });
+}
+
+// ---- Helper: URS Main Table (7 columns) ----
+function buildURSDocxTable(replies) {
+  var headerRow = new docx.TableRow({
+    tableHeader: true,
+    children: [
+      makeDocxCell("#", 400, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+      makeDocxCell("\u6761\u6b3e\u539f\u6587 / Original URS Clause", 2200, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+      makeDocxCell("\u54cd\u5e94 / Response", 900, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+      makeDocxCell("\u6280\u672f\u8bf4\u660e / Tech Spec", 2000, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+      makeDocxCell("\u6cd5\u89c4\u4f9d\u636e / Reg Ref", 1700, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+      makeDocxCell("\u5907\u6ce8 / Remarks", 1800, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER })
+    ]
+  });
+
+  var rows = [headerRow];
+  var respMap = {
+    '\u6ee1\u8db3': { label: '\u2713 \u6ee1\u8db3 / Compliant', fill: 'c6f6d5', color: '22543d' },
+    '\u90e8\u5206\u6ee1\u8db3': { label: '~ \u90e8\u5206\u6ee1\u8db3 / Partial', fill: 'fefcbf', color: '744210' },
+    '\u4e0d\u9002\u7528': { label: '\u2014 \u4e0d\u9002\u7528 / N/A', fill: 'e2e8f0', color: '4a5568' }
+  };
+
+  replies.forEach(function(r, i) {
+    var rowShading = i % 2 === 0 ? 'ffffff' : 'f8fafc';
+    var resp = respMap[r.supplierResponse] || { label: r.supplierResponse || 'N/A', fill: 'e2e8f0', color: '4a5568' };
+    var clauseText = r.originalText || '';
+    var techNote = r.technicalNote || '';
+    var regRef = r.regulationRef || '';
+    var remarkText = r.remark || '';
+    if (r.isSupplementary) {
+      remarkText = remarkText ? remarkText + ' [\u4f9b\u5e94\u5546\u8865\u5145/Supplier Added]' : '[\u4f9b\u5e94\u5546\u8865\u5145/Supplier Added]';
+    }
+
+    rows.push(new docx.TableRow({
+      children: [
+        makeDocxCell(String(i + 1), 400, { align: docx.AlignmentType.CENTER, shading: rowShading }),
+        makeDocxBilingualCell(clauseText, '', 2200, { shading: rowShading }),
+        makeDocxCell(resp.label, 900, { align: docx.AlignmentType.CENTER, shading: resp.fill, color: resp.color, bold: true, size: 14 }),
+        makeDocxBilingualCell(techNote, '', 2000, { shading: rowShading }),
+        makeDocxCell(regRef, 1700, { shading: rowShading }),
+        makeDocxCell(remarkText, 1800, { shading: rowShading })
+      ]
+    }));
+  });
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: rows
+  });
+}
+// ---- Helper: Configuration DOCX Table ----
+function buildConfigDocxTable(data) {
+  var configs = data.configList || [];
+  var rows = [
+    new docx.TableRow({
+      tableHeader: true,
+      children: [
+        makeDocxCell("\u5e8f\u53f7 / #", 500, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+        makeDocxCell("\u914d\u7f6e\u9879 / Item", 2800, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+        makeDocxCell("\u89c4\u683c\u578b\u53f7 / Specification", 2800, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+        makeDocxCell("\u6570\u91cf / Qty", 700, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER }),
+        makeDocxCell("\u5907\u6ce8 / Note", 2200, { bold: true, shading: DOCX.COLORS.primary, color: "FFFFFF", align: docx.AlignmentType.CENTER })
+      ]
+    })
+  ];
+
+  configs.forEach(function(c, i) {
+    rows.push(new docx.TableRow({
+      children: [
+        makeDocxCell(String(i + 1), 500, { align: docx.AlignmentType.CENTER, shading: i % 2 === 0 ? "ffffff" : "f8fafc" }),
+        makeDocxCell(c.name || "", 2800, { shading: i % 2 === 0 ? "ffffff" : "f8fafc" }),
+        makeDocxCell(c.spec || "", 2800, { shading: i % 2 === 0 ? "ffffff" : "f8fafc" }),
+        makeDocxCell(String(c.qty || 1) + ' ' + (c.unit || ''), 700, { align: docx.AlignmentType.CENTER, shading: i % 2 === 0 ? "ffffff" : "f8fafc" }),
+        makeDocxCell(c.remark || "", 2200, { shading: i % 2 === 0 ? "ffffff" : "f8fafc" })
+      ]
+    }));
+  });
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: rows
+  });
+}
+
+// ---- Helper: Price DOCX Table ----
+function buildPriceDocxTable(data) {
+  var totalUSD = data.prices ? (data.prices.totalUSD || 0) : 0;
+  var unitUSD = data.prices ? (data.prices.unitUSD || 0) : 0;
+  var qty = data.prices ? (data.prices.quantity || 1) : 1;
+
+  var row = function(label, value) {
+    return new docx.TableRow({
+      children: [
+        makeDocxCell(label, 3500, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+        makeDocxCell(value, 5500, { align: docx.AlignmentType.LEFT })
+      ]
+    });
+  };
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: [
+      row("\u5355\u4ef7 / Unit Price", "USD " + unitUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })),
+      row("\u6570\u91cf / Quantity", String(qty) + " set" + (qty > 1 ? "s" : "")),
+      row("\u603b\u4ef7 / Total Price", "USD " + totalUSD.toLocaleString("en-US", { minimumFractionDigits: 2 }))
+    ]
+  });
+}
+
+// ---- Helper: Payment Terms DOCX Table ----
+function buildPaymentDocxTable(data) {
+  var prices = data.prices || {};
+  var deposit = prices.deposit || 30;
+
+  var planRows = [
+    new docx.TableRow({ children: [
+      makeDocxCell((deposit) + "%", 1200, { bold: true, align: docx.AlignmentType.CENTER, shading: DOCX.COLORS.accentGold, color: "FFFFFF" }),
+      makeDocxCell("\u9884\u4ed8\u6b3e / Advance Payment", 2200, { bold: true, shading: "f4f7fc" }),
+      makeDocxCell("T/T upon contract signing", 5600)
+    ]}),
+    new docx.TableRow({ children: [
+      makeDocxCell((100 - deposit - 10) + "%", 1200, { bold: true, align: docx.AlignmentType.CENTER, shading: DOCX.COLORS.primary, color: "FFFFFF" }),
+      makeDocxCell("\u53d1\u8d27\u524d / Before Shipment", 2200, { bold: true, shading: "f4f7fc" }),
+      makeDocxCell("T/T before delivery; against shipping documents", 5600)
+    ]}),
+    new docx.TableRow({ children: [
+      makeDocxCell("10%", 1200, { bold: true, align: docx.AlignmentType.CENTER, shading: DOCX.COLORS.secondary, color: "FFFFFF" }),
+      makeDocxCell("\u9a8c\u6536\u540e / After Acceptance", 2200, { bold: true, shading: "f4f7fc" }),
+      makeDocxCell("T/T within 30 days after FAT/SAT acceptance", 5600)
+    ]})
+  ];
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: planRows
+  });
+}
+
+// ---- Helper: Delivery DOCX Table ----
+function buildDeliveryDocxTable(data) {
+  var row = function(label, value) {
+    return new docx.TableRow({
+      children: [
+        makeDocxCell(label, 3000, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+        makeDocxCell(value, 6000, { align: docx.AlignmentType.LEFT })
+      ]
+    });
+  };
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: [
+      row("\u4ea4\u8d27\u671f / Delivery Time", "60-90 days after receipt of advance payment"),
+      row("\u4ea4\u8d27\u6761\u6b3e / Terms", "FOB Shanghai / CIF (to be confirmed)"),
+      row("\u5305\u88c5 / Packaging", "Export-standard wooden case; vacuum-sealed for critical components"),
+      row("\u6587\u6863 / Documentation", "Manual, IQ/OQ protocol, certificate of conformance, packing list")
+    ]
+  });
+}
+
+// ---- Helper: After-Sales DOCX Table ----
+function buildAfterSalesDocxTable(data) {
+  var row = function(label, value) {
+    return new docx.TableRow({
+      children: [
+        makeDocxCell(label, 3000, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+        makeDocxCell(value, 6000, { align: docx.AlignmentType.LEFT })
+      ]
+    });
+  };
+
+  return new docx.Table({
+    width: { size: 100, type: docx.WidthType.PERCENTAGE },
+    rows: [
+      row("\u8d28\u4fdd\u671f / Warranty", "12 months from commissioning or 18 months from delivery"),
+      row("\u6280\u672f\u652f\u6301 / Tech Support", "Remote support: 24/7; On-site: within 72 hours"),
+      row("\u5907\u4ef6 / Spare Parts", "Recommended spare parts list included; 2-year availability guaranteed"),
+      row("\u57f9\u8bad / Training", "FAT/SAT on-site training included (3 working days)")
+    ]
+  });
+}
+
+// ---- Generic Cell Helpers ----
+function makeDocxCell(text, width, opts) {
+  opts = opts || {};
+  var children = [new docx.Paragraph({
+    alignment: opts.align || docx.AlignmentType.LEFT,
+    spacing: { before: 40, after: 40 },
+    children: [new docx.TextRun({
+      text: text || "",
+      bold: opts.bold || false,
+      size: opts.size || 16,
+      font: DOCX.FONTS.cn,
+      color: opts.color || DOCX.COLORS.text
+    })]
+  })];
+
+  return new docx.TableCell({
+    width: { size: width, type: docx.WidthType.DXA },
+    children: children,
+    shading: opts.shading ? { type: docx.ShadingType.SOLID, fill: opts.shading } : undefined,
+    verticalAlign: docx.VerticalAlign.CENTER
+  });
+}
+
+function makeDocxBilingualCell(cnText, enText, width, opts) {
+  opts = opts || {};
+  var paragraphs = [];
+
+  if (cnText) {
+    paragraphs.push(new docx.Paragraph({
+      spacing: { before: 20, after: 20 },
+      children: [new docx.TextRun({
+        text: cnText,
+        size: 16,
+        font: DOCX.FONTS.cn,
+        color: DOCX.COLORS.text
+      })]
+    }));
+  }
+  if (enText) {
+    paragraphs.push(new docx.Paragraph({
+      spacing: { before: 20, after: 20 },
+      children: [new docx.TextRun({
+        text: enText,
+        size: 14,
+        font: DOCX.FONTS.en,
+        color: DOCX.COLORS.textLight,
+        italics: true
+      })]
+    }));
+  }
+
+  return new docx.TableCell({
+    width: { size: width, type: docx.WidthType.DXA },
+    children: paragraphs,
+    shading: opts.shading ? { type: docx.ShadingType.SOLID, fill: opts.shading } : undefined,
+    verticalAlign: docx.VerticalAlign.CENTER
+  });
+}
+
+function parseDocxBilingual(text) {
+  if (!text) return { cn: "", en: "" };
+  var cnMatch = text.match(/\[CN\]([\s\S]*?)(?=\[EN\]|$)/);
+  var enMatch = text.match(/\[EN\]([\s\S]*?)$/);
+  return {
+    cn: cnMatch ? cnMatch[1].trim() : text.trim(),
+    en: enMatch ? enMatch[1].trim() : ""
+  };
+}
+
+function makeDocxRemarkCell(remark, tag, width) {
+  var parts = parseDocxBilingual(remark);
+  var paragraphs = [];
+
+  if (parts.cn) {
+    paragraphs.push(new docx.Paragraph({
+      spacing: { before: 20, after: 20 },
+      children: [new docx.TextRun({
+        text: parts.cn,
+        size: 14,
+        font: DOCX.FONTS.cn,
+        color: DOCX.COLORS.textLight
+      })]
+    }));
+  }
+  if (parts.en) {
+    paragraphs.push(new docx.Paragraph({
+      spacing: { before: 20, after: 20 },
+      children: [new docx.TextRun({
+        text: parts.en,
+        size: 13,
+        font: DOCX.FONTS.en,
+        color: DOCX.COLORS.textLight,
+        italics: true
+      })]
+    }));
+  }
+
+  return new docx.TableCell({
+    width: { size: width, type: docx.WidthType.DXA },
+    children: paragraphs,
+    verticalAlign: docx.VerticalAlign.CENTER
+  });
+}
+
+// ---- Helper: Regulation Appendix ----
+function buildDocxRegAppendix(regulations) {
+  var children = [];
+  children.push(buildDocxSeparator("Applicable Regulations / \u9002\u7528\u6cd5\u89c4"));
+
+  regulations.forEach(function(reg) {
+    children.push(new docx.Paragraph({
+      spacing: { before: 60, after: 40 },
+      children: [new docx.TextRun({
+        text: "\u2713 " + reg,
+        size: 18,
+        font: DOCX.FONTS.cn,
+        color: DOCX.COLORS.text
+      })]
+    }));
+  });
+
+  return children;
+}
+
+// ---- Helper: Section Separator ----
+function buildDocxSeparator(title) {
+  return new docx.Paragraph({
+    spacing: { before: 300, after: 200 },
+    border: { bottom: { style: docx.BorderStyle.SINGLE, size: 2, color: DOCX.COLORS.primary } },
+    children: [new docx.TextRun({
+      text: title || "",
+      bold: true,
+      size: DOCX.SIZE.h2,
+      font: DOCX.FONTS.en,
+      color: DOCX.COLORS.primary
+    })]
+  });
+}
+
+// ---- Helper: Signature Block ----
+function buildDocxSignatures() {
+  var sigData = [
+    ["\u4f9b\u5e94\u5546 / Supplier", "\u5ba2\u6237 / Customer"],
+    ["Signature: _______________", "Signature: _______________"],
+    ["Date: _______________", "Date: _______________"]
+  ];
+
+  var rows = sigData.map(function(pair) {
+    return new docx.TableRow({
+      children: [
+        new docx.TableCell({
+          width: { size: 4500, type: docx.WidthType.DXA },
+          children: [new docx.Paragraph({
+            spacing: { before: 60, after: 60 },
+            children: [new docx.TextRun({ text: pair[0], size: 18, font: DOCX.FONTS.cn, color: DOCX.COLORS.text })]
+          })]
+        }),
+        new docx.TableCell({
+          width: { size: 4500, type: docx.WidthType.DXA },
+          children: [new docx.Paragraph({
+            spacing: { before: 60, after: 60 },
+            children: [new docx.TextRun({ text: pair[1], size: 18, font: DOCX.FONTS.cn, color: DOCX.COLORS.text })]
+          })]
+        })
+      ]
+    });
+  });
+
+  var spacer = new docx.Paragraph({ spacing: { before: 400 }, children: [] });
+
+  return [spacer, new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: rows })];
+}
+
+// ---- Helper: Bilingual Paragraph ----
+function buildDocxBilingualPara(cnText, enText, headingLevel, fontSize) {
+  return [
+    new docx.Paragraph({
+      heading: headingLevel,
+      spacing: { before: 120, after: 60 },
+      children: [new docx.TextRun({
+        text: cnText || "",
+        bold: true,
+        size: fontSize,
+        font: DOCX.FONTS.cn,
+        color: DOCX.COLORS.primary
+      })]
+    }),
+    new docx.Paragraph({
+      spacing: { before: 40, after: 80 },
+      children: [new docx.TextRun({
+        text: enText || "",
+        size: fontSize ? fontSize - 4 : 18,
+        font: DOCX.FONTS.en,
+        color: DOCX.COLORS.textLight,
+        italics: true
+      })]
+    })
+  ];
 }
 
 // ============================================================================
