@@ -223,6 +223,32 @@
       #main-layout { height: auto !important; }
       .doc-paper { border: none !important; padding: 0 !important; }
     }
+    /* AI Parse enhancements */
+    .ai-summary-box {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 1px solid var(--accent-gold); border-radius: 6px;
+      padding: 10px 14px; margin-top: 10px; font-size: 0.8rem; color: #744210;
+    }
+    .ai-summary-box .ai-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: var(--accent-gold); color: #fff; font-size: 0.68rem;
+      font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-right: 6px;
+    }
+    .ai-category-stats {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+    }
+    .ai-category-tag {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #edf2f7; color: #4a5568; font-size: 0.68rem;
+      padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    }
+    .ai-category-tag .count { color: var(--primary); font-weight: 700; }
+    .ai-response-满足 { color: var(--accent-green); font-weight: 600; }
+    .ai-response-部分满足 { color: var(--accent-gold); font-weight: 600; }
+    .ai-response-不适用 { color: #a0aec0; font-weight: 600; }
+    .conn-status-success { color: var(--accent-green); }
+    .conn-status-error { color: #c53030; }
+    .conn-status-testing { color: var(--accent-gold); }
     /* Animation */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.3s ease; }
@@ -440,6 +466,9 @@
             <button class="btn-primary" onclick="parseURS()" id="parseBtn">
               🔍 智能解析
             </button>
+            <button class="btn-gold" onclick="parseURSWithAI()" id="aiParseBtn">
+              🤖 AI解析
+            </button>
             <button class="btn-outline" onclick="loadSampleURS()">
               📄 加载示例
             </button>
@@ -519,6 +548,39 @@
               </select>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 🤖 AI解析设置 Panel -->
+      <div class="section-card">
+        <h3 onclick="toggleCard(this)">
+          <span class="toggle-icon collapsed">▼</span>🤖 AI解析设置
+        </h3>
+        <div class="card-body collapsed">
+          <div style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:0.72rem;">API Key</label>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <input type="password" id="doubaoApiKey" class="form-input" placeholder="输入豆包API Key..." style="font-size:0.78rem; padding:5px 8px; flex:1;" />
+              <button class="btn-outline" onclick="toggleApiKeyVisibility()" style="padding:4px 8px; font-size:0.72rem; white-space:nowrap;" id="apiKeyToggleBtn">👁 显示</button>
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:0.72rem;">API Base URL</label>
+            <input type="text" id="doubaoBaseUrl" class="form-input" value="https://ark.cn-beijing.volces.com/api/v3" placeholder="API Base URL..." style="font-size:0.78rem; padding:5px 8px;" />
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:0.72rem;">Model / Endpoint ID</label>
+            <input type="text" id="doubaoModel" class="form-input" value="doubao-pro-32k" placeholder="如 doubao-pro-32k 或 ep-xxxxxxxx" style="font-size:0.78rem; padding:5px 8px;" />
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="btn-primary" onclick="saveDoubaoSettings()" style="font-size:0.78rem; padding:6px 12px;">
+              💾 保存设置
+            </button>
+            <button class="btn-gold" onclick="testDoubaoConnection()" style="font-size:0.78rem; padding:6px 12px;" id="testConnBtn">
+              🔗 测试连接
+            </button>
+          </div>
+          <div id="doubaoConnStatus" style="margin-top:8px; font-size:0.72rem; min-height:18px;"></div>
         </div>
       </div>
 
@@ -944,6 +1006,394 @@ function parseURS() {
     btn.innerHTML = '🔍 智能解析';
     btn.disabled = false;
   }, 800);
+}
+
+// ---- Doubao AI Settings ----
+function saveDoubaoSettings() {
+  const settings = {
+    apiKey: document.getElementById('doubaoApiKey').value.trim(),
+    baseUrl: document.getElementById('doubaoBaseUrl').value.trim(),
+    model: document.getElementById('doubaoModel').value.trim()
+  };
+  if (!settings.apiKey) {
+    showToast('请输入API Key', 'error');
+    return;
+  }
+  localStorage.setItem('doubao_settings', JSON.stringify(settings));
+  showToast('AI解析设置已保存', 'success');
+}
+
+function loadDoubaoSettings() {
+  const raw = localStorage.getItem('doubao_settings');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('doubaoApiKey');
+  const btn = document.getElementById('apiKeyToggleBtn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈 隐藏';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁 显示';
+  }
+}
+
+async function testDoubaoConnection() {
+  const settings = {
+    apiKey: document.getElementById('doubaoApiKey').value.trim(),
+    baseUrl: document.getElementById('doubaoBaseUrl').value.trim(),
+    model: document.getElementById('doubaoModel').value.trim()
+  };
+  if (!settings.apiKey) {
+    document.getElementById('doubaoConnStatus').innerHTML =
+      '<span class="conn-status-error">❌ 请先输入API Key</span>';
+    return;
+  }
+  const statusEl = document.getElementById('doubaoConnStatus');
+  const btn = document.getElementById('testConnBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 测试中';
+  statusEl.innerHTML = '<span class="conn-status-testing">⏳ 正在测试连接...</span>';
+
+  try {
+    const url = settings.baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + settings.apiKey
+      },
+      body: JSON.stringify({
+        model: settings.model,
+        messages: [
+          { role: 'user', content: '你好，请回复"连接成功"' }
+        ],
+        max_tokens: 20
+      })
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const reply = data.choices?.[0]?.message?.content || '';
+      statusEl.innerHTML = '<span class="conn-status-success">✅ 连接成功！模型回复：' + reply.substring(0, 30) + '</span>';
+      // 自动保存设置
+      localStorage.setItem('doubao_settings', JSON.stringify(settings));
+    } else {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error?.message || response.statusText || '未知错误';
+      statusEl.innerHTML = '<span class="conn-status-error">❌ 连接失败：' + errMsg.substring(0, 60) + '</span>';
+    }
+  } catch (err) {
+    statusEl.innerHTML = '<span class="conn-status-error">❌ 网络错误：' + err.message.substring(0, 60) + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔗 测试连接';
+  }
+}
+
+// ---- AI-powered URS Parsing ----
+const AI_SYSTEM_PROMPT = `你是医药隔离器售前技术专家。请分析用户提供的URS（用户需求规格）文档，提取以下信息并以JSON格式返回：
+
+{
+  "equipmentTypes": ["sterile"|"vhp"|"integrated"|"negative", ...],
+  "equipmentConfidence": {"sterile": 0.9, "vhp": 0.3, ...},
+  "parameters": {
+    "workAreaLength": "", "workAreaDepth": "", "workAreaHeight": "",
+    "pressureType": "正压|负压",
+    "pressureMin": "", "pressureMax": "",
+    "cleanClass": "ISO 5级|ISO 7级|ISO 8级",
+    "gloveCount": "",
+    "material": "316L不锈钢|304不锈钢",
+    "oel": "",
+    "sal": "",
+    "vhpRequired": true|false,
+    "rtpRequired": true|false,
+    "fatRequired": true|false,
+    "satRequired": true|false,
+    "validationRequired": true|false,
+    "part11Required": true|false,
+    "voltage": "", "frequency": "",
+    "airPressureMin": "", "airPressureMax": "",
+    "raValue": ""
+  },
+  "requirements": [
+    {
+      "id": "URS-001",
+      "text": "需求原文摘要",
+      "category": "性能参数|材质结构|验证确认|安全联锁|控制系统|文件资料|公用工程|灭菌系统|物料传递|环境监测|交付服务|其他",
+      "importance": "高|中|低",
+      "supplierResponse": "满足|部分满足|不适用"
+    }
+  ],
+  "summary": "一句话概括客户需求"
+}
+
+设备类型说明：
+- sterile: 单体无菌隔离器（正压、无菌操作、ISO 5级洁净）
+- vhp: VHP传递窗（汽化过氧化氢灭菌传递）
+- integrated: 整线隔离器（灌装+轧盖+称重联动线体）
+- negative: 单体负压隔离器（有毒有害、OEL防护）
+
+请确保返回纯JSON，不要包含markdown代码块标记。`;
+
+async function parseURSWithAI() {
+  const text = document.getElementById('ursInput').value.trim();
+  if (!text) {
+    alert('请先输入客户URS内容');
+    return;
+  }
+
+  // 读取API设置
+  const settings = loadDoubaoSettings();
+  if (!settings || !settings.apiKey) {
+    // 尝试从输入框读取（用户可能没点保存）
+    const apiKey = document.getElementById('doubaoApiKey').value.trim();
+    if (!apiKey) {
+      const useFallback = confirm('未配置豆包API Key，是否使用规则引擎解析（本地智能解析）？\n\n点击"确定"使用规则引擎，点击"取消"前往设置API Key。');
+      if (useFallback) {
+        parseURS();
+        return;
+      } else {
+        // 展开AI设置面板
+        const aiCard = document.querySelector('#doubaoApiKey')?.closest('.section-card');
+        if (aiCard) {
+          const h3 = aiCard.querySelector('h3');
+          const body = h3.nextElementSibling;
+          if (body.classList.contains('collapsed')) {
+            body.classList.remove('collapsed');
+            h3.querySelector('.toggle-icon').classList.remove('collapsed');
+          }
+          aiCard.scrollIntoView({ behavior: 'smooth' });
+        }
+        document.getElementById('doubaoApiKey').focus();
+        return;
+      }
+    }
+  }
+
+  const apiKey = settings?.apiKey || document.getElementById('doubaoApiKey').value.trim();
+  const baseUrl = settings?.baseUrl || document.getElementById('doubaoBaseUrl').value.trim() || 'https://ark.cn-beijing.volces.com/api/v3';
+  const model = settings?.model || document.getElementById('doubaoModel').value.trim() || 'doubao-pro-32k';
+
+  const btn = document.getElementById('aiParseBtn');
+  btn.innerHTML = '<span class="spinner"></span> AI解析中...';
+  btn.disabled = true;
+
+  try {
+    const url = baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: 'system', content: AI_SYSTEM_PROMPT },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.1,
+        max_tokens: 4096
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      const errMsg = errData.error?.message || response.statusText || 'API请求失败';
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content || '';
+
+    // 清理可能的markdown代码块标记
+    content = content.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+    let aiResult;
+    try {
+      aiResult = JSON.parse(content);
+    } catch (parseErr) {
+      throw new Error('AI返回内容无法解析为JSON，请检查模型输出格式');
+    }
+
+    // 处理AI返回的结果
+    const identifiedTypes = aiResult.equipmentTypes || [];
+    const typeScores = aiResult.equipmentConfidence || {};
+    const params = aiResult.parameters || {};
+    const aiRequirements = aiResult.requirements || [];
+    const summary = aiResult.summary || '';
+
+    // 确保至少有一个设备类型
+    if (identifiedTypes.length === 0) identifiedTypes.push('sterile');
+
+    // 更新设备类型复选框
+    document.querySelectorAll('.equip-cb').forEach(cb => {
+      cb.checked = identifiedTypes.includes(cb.value);
+    });
+    updateEquipTypeDisplay();
+    state.parsedEquipTypes = identifiedTypes;
+
+    // 更新参数
+    // 处理布尔值字段
+    const boolFields = ['vhpRequired', 'rtpRequired', 'fatRequired', 'satRequired', 'validationRequired', 'part11Required'];
+    for (const f of boolFields) {
+      if (params[f] !== undefined) {
+        params[f] = !!params[f];
+      }
+    }
+    state.parsedParams = params;
+    renderParamAdjust(params);
+
+    // 转换AI需求格式到现有格式
+    const items = aiRequirements.map((req, idx) => ({
+      id: req.id || 'URS-' + String(idx + 1).padStart(3, '0'),
+      text: req.text || '',
+      originalLine: req.text || '',
+      category: req.category || '其他',
+      importance: req.importance || '中',
+      supplierResponse: req.supplierResponse || '满足'
+    }));
+    state.parsedRequirements = items;
+
+    // 渲染AI增强的解析结果
+    renderParseResultAI(identifiedTypes, typeScores, params, items, summary);
+
+    showToast('AI解析完成', 'success');
+
+  } catch (err) {
+    console.error('AI解析错误:', err);
+    const useFallback = confirm('AI解析失败：' + err.message + '\n\n是否使用规则引擎降级解析？');
+    if (useFallback) {
+      parseURS();
+    } else {
+      showToast('AI解析失败：' + err.message, 'error');
+    }
+  } finally {
+    btn.innerHTML = '🤖 AI解析';
+    btn.disabled = false;
+  }
+}
+
+// ---- AI增强的解析结果渲染 ----
+function renderParseResultAI(identifiedTypes, typeScores, params, items, summary) {
+  const resultDiv = document.getElementById('parseResult');
+  let html = '<div class="fade-in">';
+
+  // AI总结
+  if (summary) {
+    html += '<div class="ai-summary-box">';
+    html += '<span class="ai-badge">🤖 AI</span>';
+    html += '<strong>需求概要：</strong>' + escapeHtml(summary);
+    html += '</div>';
+  }
+
+  // 设备类型识别
+  html += '<div style="margin-top:12px;"><strong style="font-size:0.82rem; color:var(--primary);">🤖 AI识别设备类型</strong>';
+  html += '<div style="margin-top:6px;">';
+  for (const t of identifiedTypes) {
+    const info = EQUIP_TYPES[t];
+    if (info) {
+      html += `<span class="equip-badge ${info.badge}" style="font-size:0.78rem; padding:4px 12px;">${info.name}</span>`;
+    }
+  }
+  html += '</div>';
+
+  // 置信度详情
+  if (Object.keys(typeScores).length > 0) {
+    html += '<div style="margin-top:8px; font-size:0.72rem; color:#718096;">AI置信度：';
+    for (const [k, v] of Object.entries(typeScores)) {
+      const info = EQUIP_TYPES[k];
+      const name = info ? info.name : k;
+      const pct = Math.round(v * 100);
+      const barColor = pct >= 70 ? 'var(--accent-green)' : (pct >= 40 ? 'var(--accent-gold)' : '#cbd5e0');
+      html += `<span style="margin-right:8px;">${name} `;
+      html += `<span style="display:inline-block; width:60px; height:8px; background:#e2e8f0; border-radius:4px; vertical-align:middle; position:relative;">`;
+      html += `<span style="display:inline-block; width:${pct}%; height:100%; background:${barColor}; border-radius:4px;"></span>`;
+      html += `</span> ${pct}%</span>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // 关键参数提取
+  html += '<div style="margin-top:12px;"><strong style="font-size:0.82rem; color:var(--primary);">🤖 AI关键参数提取</strong>';
+  html += '<div class="table-scroll-wrap"><table class="parse-table"><thead><tr><th>需求项</th><th>识别内容</th><th>置信度</th></tr></thead><tbody>';
+  const paramLabels = {
+    workAreaLength: '工作区长度', workAreaDepth: '工作区深度', workAreaHeight: '工作区高度',
+    pressureMin: '压力下限', pressureMax: '压力上限', pressureType: '压力类型',
+    oel: 'OEL要求', sal: 'SAL要求', cleanClass: '洁净等级', gloveCount: '手套数量',
+    vhpRequired: 'VHP灭菌', rtpRequired: 'RTP快速转移', material: '主体材质',
+    raValue: '表面粗糙度Ra', fatRequired: 'FAT验证', satRequired: 'SAT验证',
+    validationRequired: 'IQ/OQ/PQ验证', part11Required: '21 CFR Part 11',
+    voltage: '电压', frequency: '频率', airPressureMin: '气压下限', airPressureMax: '气压上限'
+  };
+  let hasParams = false;
+  for (const [k, v] of Object.entries(params)) {
+    if (v === '' || v === undefined || v === null) continue;
+    hasParams = true;
+    const label = paramLabels[k] || k;
+    const displayVal = typeof v === 'boolean' ? (v ? '✅ 是' : '❌ 否') : v;
+    const confidence = '高'; // AI提取的参数置信度默认为高
+    html += `<tr><td>${label}</td><td>${escapeHtml(String(displayVal))}</td><td class="confidence-high">${confidence}</td></tr>`;
+  }
+  if (!hasParams) {
+    html += '<tr><td colspan="3" style="color:#a0aec0; text-align:center;">未识别到明确技术参数</td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  // 需求分类统计
+  if (items.length > 0) {
+    const categoryCount = {};
+    for (const item of items) {
+      const cat = item.category || '其他';
+      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    }
+    html += '<div style="margin-top:12px;"><strong style="font-size:0.82rem; color:var(--primary);">🤖 AI需求分类统计</strong>';
+    html += '<div class="ai-category-stats">';
+    for (const [cat, count] of Object.entries(categoryCount)) {
+      html += `<span class="ai-category-tag">${escapeHtml(cat)} <span class="count">${count}</span></span>`;
+    }
+    html += '</div></div>';
+  }
+
+  // URS条款列表（含AI判断）
+  html += `<div style="margin-top:10px; font-size:0.78rem; color:var(--primary);">
+    🤖 AI已识别 <strong>${items.length}</strong> 条客户需求条款
+  </div>`;
+
+  // 需求详情表
+  if (items.length > 0) {
+    html += '<div style="margin-top:8px;" class="table-scroll-wrap"><table class="parse-table"><thead><tr><th>编号</th><th>需求摘要</th><th>分类</th><th>重要性</th><th>供应商响应</th></tr></thead><tbody>';
+    for (const item of items) {
+      const respClass = 'ai-response-' + (item.supplierResponse || '满足');
+      html += `<tr>
+        <td style="font-weight:600; color:var(--primary);">${escapeHtml(item.id)}</td>
+        <td>${escapeHtml(item.text).substring(0, 80)}${item.text.length > 80 ? '...' : ''}</td>
+        <td style="font-size:0.68rem; color:#718096;">${escapeHtml(item.category || '其他')}</td>
+        <td style="font-size:0.72rem; text-align:center;">${escapeHtml(item.importance || '中')}</td>
+        <td class="${respClass}" style="text-align:center;">${escapeHtml(item.supplierResponse || '满足')}</td>
+      </tr>`;
+    }
+    html += '</tbody></table></div>';
+  }
+
+  html += '</div>';
+  resultDiv.innerHTML = html;
+  resultDiv.style.display = 'block';
+}
+
+// HTML转义辅助函数
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function extractParameters(text) {
@@ -3198,6 +3648,14 @@ document.addEventListener('DOMContentLoaded', function() {
   refreshTemplateGrid();
   refreshTemplateSelect();
   refreshCustomerSelect();
+
+  // 加载豆包AI设置
+  const savedDoubao = loadDoubaoSettings();
+  if (savedDoubao) {
+    if (savedDoubao.apiKey) document.getElementById('doubaoApiKey').value = savedDoubao.apiKey;
+    if (savedDoubao.baseUrl) document.getElementById('doubaoBaseUrl').value = savedDoubao.baseUrl;
+    if (savedDoubao.model) document.getElementById('doubaoModel').value = savedDoubao.model;
+  }
 });
 
 // ============================================================================
