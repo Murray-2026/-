@@ -215,6 +215,7 @@
     .equip-badge.sterile { background: #c6f6d5; color: #22543d; }
     .equip-badge.vhp { background: #bee3f8; color: #2a4365; }
     .equip-badge.integrated { background: #e9d8fd; color: #44337a; }
+    .equip-badge.sterile_negative { background: #fed7e1; color: #702459; }
     .equip-badge.negative { background: #fed7d7; color: #742a2a; }
     /* Print styles */
     @media print {
@@ -412,7 +413,7 @@
       </div>
       <div class="header-right">
         <span id="header-date"></span>
-        <span>版本 2.0</span>
+        <span>版本 2.1</span>
       </div>
     </div>
   </div>
@@ -493,10 +494,11 @@
               <span id="equipTypeDisplay" style="color:#a0aec0;">请先解析URS或手动选择</span>
             </div>
             <div class="multi-select-dropdown" id="equipTypeDropdown">
-              <label><input type="checkbox" class="equip-cb" value="sterile" /> 单体无菌隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="sterile" /> 无菌操作类隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="sterile_negative" /> 无菌负压隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="negative" /> 非无菌负压隔离器</label>
               <label><input type="checkbox" class="equip-cb" value="vhp" /> VHP传递窗</label>
-              <label><input type="checkbox" class="equip-cb" value="integrated" /> 整线隔离器</label>
-              <label><input type="checkbox" class="equip-cb" value="negative" /> 单体负压隔离器</label>
+              <label><input type="checkbox" class="equip-cb" value="integrated" /> 联动线配套隔离器</label>
             </div>
           </div>
           <label class="form-label" style="margin-top:10px;">关键参数修正</label>
@@ -751,17 +753,19 @@ var DOCX = {
 
 // ---- Constants ----
 const EQUIP_TYPES = {
-  sterile: { name: '单体无菌隔离器', en: 'Positive Pressure Sterile Isolator', badge: 'sterile' },
+  sterile: { name: '无菌操作类隔离器', en: 'Sterile Isolator', badge: 'sterile' },
+  sterile_negative: { name: '无菌负压隔离器', en: 'Sterile Negative Pressure Isolator', badge: 'sterile_negative' },
+  negative: { name: '非无菌负压隔离器', en: 'Non-Sterile Negative Pressure Isolator', badge: 'negative' },
   vhp: { name: 'VHP传递窗', en: 'VHP Pass-Through Chamber', badge: 'vhp' },
-  integrated: { name: '整线隔离器', en: 'Integrated Line Isolator', badge: 'integrated' },
-  negative: { name: '单体负压隔离器', en: 'Negative Pressure Isolator', badge: 'negative' }
+  integrated: { name: '联动线配套隔离器', en: 'Integrated Line Isolator', badge: 'integrated' }
 };
 
 const KEYWORD_MAP = {
-  sterile: ['无菌隔离', '正压隔离', '无菌检测', '无菌分装', '称量隔离', 'positive pressure isolator', 'sterile isolator', '无菌手套箱', '无菌操作', '正压运行', 'iso 5', 'class 100', '手套检漏', 'rtp', '快速转移', '无菌制剂', '灌装隔离'],
-  vhp: ['VHP传递', '传递窗', '灭菌传递', '物料传递', 'pass-through', 'VHP chamber', 'transfer hatch', '传递舱', '灭菌传递窗', 'vhp灭菌循环', '生物指示剂', '双门互锁', '物料灭菌'],
-  integrated: ['整线隔离', '灌装线隔离', '联动线', '全线隔离', 'integrated isolator', 'line isolator', 'filling line isolator', '灌装隔离', '轧盖隔离', '称重隔离', '多工位', '传送系统', '在线称重', '电子批记录', 'ebr'],
-  negative: ['负压隔离', 'OEL', '高活性', '有毒', 'HPAPI', 'negative pressure isolator', 'containment isolator', '防护隔离', '毒性隔离', '袋进袋出', 'bibo', 'hepa过滤', '排风', '密闭防护', 'oeb', '细胞毒性', '抗肿瘤']
+  sterile: ['无菌隔离器','正压隔离','无菌检测','无菌分装','无菌检查','称量隔离','positive pressure isolator','sterile isolator','无菌手套箱','无菌操作','正压运行','iso 5','class 100','手套检漏','无菌制剂','灌装隔离','aseptic isolator','barrier isolator','无菌灌装','无菌操作隔离器','无菌检验隔离器','分装隔离器','隔离操作器','sterile barrier','无菌操作舱','正压无菌','无菌称量隔离','sterile processing isolator','无菌取样','positive pressure barrier','无菌环境','无菌生产','aseptic processing','无菌连接','无菌传递','sterile transfer isolator','灌装隔离器','正压无菌隔离','无菌分装隔离','sterile filling isolator','无菌隔离系统','aseptic isolator system','无菌称量','无菌检测隔离','sterile testing isolator','sterile processing','无菌取样隔离','无菌检测隔离器','无菌分装隔离器'],
+  sterile_negative: ['无菌负压隔离','无菌负压','无菌防护隔离','正负压隔离','正负压无菌','无菌负压称量','无菌负压分装','无菌负压操作','无菌负压手套箱','高活性无菌隔离','高毒无菌隔离','无菌高毒隔离','高活性无菌原料药隔离','无菌负压屏障隔离','无菌负压密闭隔离','双重防护无菌隔离','双功能隔离','sterile negative isolator','sterile negative pressure isolator','aseptic containment isolator','sterile containment isolator','aseptic containment glove box','sterile negative pressure glove box','sterilizable containment isolator','dual function isolator','hpapi sterile isolator','sterile negative isolation system','sterile toxic isolator','sterile negative sampling isolator','sterile negative milling isolator','无菌负压检测隔离','无菌负压取样隔离','无菌负压粉碎隔离','无菌负压操作舱','无菌负压工作舱','无菌称量防护隔离','无菌oeb隔离','无菌oel隔离','无菌负压传递隔离','vhp灭菌负压隔离','正压灭菌负压防护隔离','无菌负压称量罩','containment sterile isolator','aseptic negative pressure isolator','sterile isolator with negative pressure','无菌防护操作隔离','无菌负压分装称量隔离','毒且无菌','高毒且无菌','活性且无菌'],
+  negative: ['负压隔离器','负压隔离系统','防护隔离器','有毒隔离器','高活性隔离器','potent compound isolator','hpapi isolator','高活性药物隔离器','抗肿瘤药物隔离器','cytotoxic isolator','激素类隔离器','oeb隔离器','oeb5隔离器','负压称量隔离器','负压称量罩','负压操作隔离器','防护操作隔离器','operator protection isolator','toxic isolator','hazardous drug isolator','containment glove box','防护手套箱','负压密闭隔离器','负压屏障隔离器','oel隔离器','高毒隔离器','负压检测隔离器','负压取样隔离器','sampling isolator','负压操作舱','负压工作舱','powder containment isolator','粉体隔离器','粉末防护隔离器','负压分装隔离器','非无菌负压隔离器','non-sterile negative isolator','non-sterile containment isolator','防护隔离系统','防护操作舱','粉体防护隔离器','高毒称量隔离器','toxic weighing isolator','负压粉碎隔离器','negative milling isolator','potent drug isolator','hazardous material isolator','负压称量站','negative weighing station','防护称量隔离器','containment weighing isolator','负压投料隔离器','oel','oeb','高活性','高毒','细胞毒性','抗肿瘤','密闭防护','排风'],
+  vhp: ['vhp传递','传递窗','灭菌传递','物料传递','pass-through','vhp chamber','transfer hatch','传递舱','灭菌传递窗','vhp灭菌循环','双门互锁','物料灭菌','汽化双氧水传递','过氧化氢传递','vhp pass through','decontamination transfer chamber','vhp传递窗隔离','vhp灭菌传递','过氧化氢灭菌传递','h2o2传递窗','vhp decontamination chamber','sterilizing pass-through','transfer isolator','vhp airlock','双扉传递窗','双门传递','净化传递窗','洁净传递窗','class pass through','material transfer chamber','vhp transfer system','灭菌传递系统','contamination transfer','无菌传递窗','biodecontamination pass through','vhp灭菌舱','传递窗隔离器','vhp sterilization transfer','双门灭菌传递','vhp tunnel','vhp传递系统','vhp door','传递柜','h2o2 vapor pass through','汽化过氧化氢传递窗'],
+  integrated: ['整线隔离','灌装线隔离','联动线','全线隔离','integrated isolator','line isolator','filling line isolator','灌装隔离','轧盖隔离','称重隔离','多工位','传送系统','在线称重','电子批记录','ebr','整线隔离系统','灌装联动线','连线隔离器','filling-sealing-capping line','integrated isolator line','联动线隔离','灌装轧盖联动','灌装加塞轧盖','无菌灌装线','无菌分装线','无菌制剂联动线','灌装隔离系统','联动线体','无菌连线','integrated line system','灌装隔离器系统','联动生产线','联动隔离系统','连续生产隔离','灌装线隔离系统','automatic filling line isolator','sterile filling line','分装联动线','无菌灌装联动','isolator filling line','灌装加塞隔离','联动隔离器','整线无菌隔离','integrated barrier system','灌装线屏障','联动线屏障']
 };
 
 const REGULATION_REFS = {
@@ -822,9 +826,10 @@ const REGULATION_REFS = {
 
 const PRICE_RANGES = {
   sterile: [120000, 220000],
+  sterile_negative: [200000, 360000],
+  negative: [150000, 280000],
   vhp: [45000, 85000],
-  integrated: [420000, 850000],
-  negative: [150000, 280000]
+  integrated: [420000, 850000]
 };
 
 // ---- Utility Functions ----
@@ -962,7 +967,7 @@ function parseURS() {
 
   setTimeout(() => {
     // 1. Identify equipment types
-    const typeScores = { sterile: 0, vhp: 0, integrated: 0, negative: 0 };
+    const typeScores = { sterile: 0, sterile_negative: 0, negative: 0, vhp: 0, integrated: 0 };
     const lowerText = text.toLowerCase();
     for (const [type, keywords] of Object.entries(KEYWORD_MAP)) {
       for (const kw of keywords) {
@@ -970,6 +975,10 @@ function parseURS() {
           typeScores[type] += (kw.length > 4 ? 2 : 1);
         }
       }
+    }
+    // 优先级规则：同时命中sterile_negative和negative时，优先归sterile_negative
+    if (typeScores.sterile_negative > 0 && typeScores.negative > 0) {
+      typeScores.negative = 0;
     }
     const maxScore = Math.max(...Object.values(typeScores));
     const identifiedTypes = [];
@@ -987,8 +996,9 @@ function parseURS() {
     updateEquipTypeDisplay();
     state.parsedEquipTypes = identifiedTypes;
 
-    // 2. Extract technical parameters
-    const params = extractParameters(text);
+    // 2. Extract technical parameters (pass identified type for OEL/OEB gating)
+    const primaryTypeForParams = identifiedTypes[0] || 'sterile';
+    const params = extractParameters(text, primaryTypeForParams);
     state.parsedParams = params;
     renderParamAdjust(params);
 
@@ -1101,7 +1111,7 @@ async function testDoubaoConnection() {
 const AI_SYSTEM_PROMPT = `你是医药隔离器售前技术专家。请分析用户提供的URS（用户需求规格）文档，提取以下信息并以JSON格式返回：
 
 {
-  "equipmentTypes": ["sterile"|"vhp"|"integrated"|"negative", ...],
+  "equipmentTypes": ["sterile"|"sterile_negative"|"negative"|"vhp"|"integrated", ...],
   "equipmentConfidence": {"sterile": 0.9, "vhp": 0.3, ...},
   "parameters": {
     "workAreaLength": "", "workAreaDepth": "", "workAreaHeight": "",
@@ -1134,11 +1144,14 @@ const AI_SYSTEM_PROMPT = `你是医药隔离器售前技术专家。请分析用
   "summary": "一句话概括客户需求"
 }
 
-设备类型说明：
-- sterile: 单体无菌隔离器（正压、无菌操作、ISO 5级洁净）
-- vhp: VHP传递窗（汽化过氧化氢灭菌传递）
-- integrated: 整线隔离器（灌装+轧盖+称重联动线体）
-- negative: 单体负压隔离器（有毒有害、OEL防护）
+设备类型说明（5类）：
+- sterile: 无菌操作类隔离器（正压、无菌操作、ISO 5级洁净，用于无菌制剂灌装/分装/检测）
+- sterile_negative: 无菌负压隔离器（无菌+负压双重设计，用于带活性或毒性的药品在无菌环境下操作，包括灌装/分装/称量等。需VHP灭菌+负压防护+灭菌验证）
+- negative: 非无菌负压隔离器（纯防护负压，不要求无菌，用于HPAPI称量/粉碎等高毒非无菌场景。无VHP灭菌、无灭菌验证）
+- vhp: VHP传递窗隔离器（汽化过氧化氢灭菌传递）
+- integrated: 联动线配套隔离器（灌装+轧盖+称重联动线体）
+
+注意：sterile_negative=毒+无菌（双重需求），negative=仅毒防护（不要求无菌）。同时命中两类时优先归sterile_negative。
 
 请确保返回纯JSON，不要包含markdown代码块标记。`;
 
@@ -1396,67 +1409,163 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function extractParameters(text) {
+function extractParameters(text, equipType) {
   const params = {};
-  // Dimensions
-  const dimMatch = text.match(/(\d+)\s*[×xX*]\s*(\d+)\s*[×xX*]\s*(\d+)/);
+  // 判断是否为负压类（OEL/OEB仅适用于负压类）
+  const isNegativeType = (equipType === 'sterile_negative' || equipType === 'negative');
+  // 1. 尺寸(长×宽×高)
+  const dimMatch = text.match(/(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)\s*[×xX*]\s*(\d+\.?\d*)/);
   if (dimMatch) {
     params.workAreaLength = dimMatch[1];
     params.workAreaDepth = dimMatch[2];
     params.workAreaHeight = dimMatch[3];
   }
-  // Pressure
-  const posPressure = text.match(/\+(\d+)\s*[~\-至]\s*\+?(\d+)\s*Pa/);
-  if (posPressure) {
+  // 2. 正压范围
+  const posPressure = text.match(/\+?(\d+\.?\d*)\s*[~\-至]\s*\+?(\d+\.?\d*)\s*Pa/);
+  if (posPressure && text.match(/正压|positive/i)) {
     params.pressureMin = posPressure[1];
     params.pressureMax = posPressure[2];
     params.pressureType = '正压';
   }
-  const negPressure = text.match(/-(\d+)\s*[~\-至]\s*-?(\d+)\s*Pa/);
-  if (negPressure) {
+  // 3. 负压范围
+  const negPressure = text.match(/[-]?(\d+\.?\d*)\s*[~\-至]\s*[-]?(\d+\.?\d*)\s*Pa/);
+  if (negPressure && text.match(/负压|negative/i)) {
     params.pressureMin = negPressure[1];
     params.pressureMax = negPressure[2];
     params.pressureType = '负压';
   }
-  // OEL
-  const oelMatch = text.match(/OEL\s*[<≤]\s*([\d.]+)\s*[μu]?g\/m[³3]/i);
-  if (oelMatch) params.oel = oelMatch[1];
-  // SAL
-  const salMatch = text.match(/10[⁻\-]([⁶6])/);
-  if (salMatch) params.sal = '10⁻⁶';
-  // ISO class
-  const isoMatch = text.match(/ISO\s*5/i);
-  if (isoMatch) params.cleanClass = 'ISO 5级';
-  // Gloves
-  const gloveMatch = text.match(/(\d+)\s*[只付个]\s*手套/);
+  // 4. OEL — 仅适用于负压类
+  if (isNegativeType) {
+    const oelMatch = text.match(/OEL\s*[<≤<=:：]?\s*([\d.]+)\s*[μuµ]?g\/m[³3]/i);
+    if (oelMatch) params.oel = oelMatch[1];
+    // OEB等级 — 仅适用于负压类
+    const oebMatch = text.match(/OEB\s*[等级]?\s*[:：]?\s*([1-6])\s*级?/i);
+    if (oebMatch) params.oeb = oebMatch[1];
+  }
+  // 5. SAL
+  const salMatch = text.match(/SAL\s*[<≤<=:：]?\s*10[⁻\-^]([0-9]+)/i);
+  if (salMatch) params.sal = '10⁻' + salMatch[1];
+  // 6. ISO等级
+  const isoMatch = text.match(/ISO\s*[等级级别]?\s*[:：]?\s*(\d+)\s*级?/i);
+  if (isoMatch) params.cleanClass = 'ISO ' + isoMatch[1] + '级';
+  // 7. 手套数量
+  const gloveMatch = text.match(/手套[数量]?\s*[:：]?\s*(\d+)\s*[副只个对]/);
   if (gloveMatch) params.gloveCount = gloveMatch[1];
-  // VHP
-  if (text.match(/VHP|汽化过氧化氢/i)) params.vhpRequired = true;
-  // RTP
-  if (text.match(/RTP|快速转移/)) params.rtpRequired = true;
-  // Material
-  if (text.match(/316L/)) params.material = '316L不锈钢';
-  if (text.match(/Ra\s*[≤<]\s*([\d.]+)\s*[μu]m/)) params.raValue = text.match(/Ra\s*[≤<]\s*([\d.]+)\s*[μu]m/)[1];
-  // Validation
-  if (text.match(/FAT/)) params.fatRequired = true;
-  if (text.match(/SAT/)) params.satRequired = true;
-  if (text.match(/IQ.*OQ.*PQ|验证文件/)) params.validationRequired = true;
-  // Power
+  // 8. VHP(布尔)
+  if (text.match(/VHP|汽化双氧水|汽化过氧化氢|过氧化氢灭菌/i)) params.vhpRequired = true;
+  // 9. RTP(布尔)
+  if (text.match(/RTP|快速转移[端口系统]/i)) params.rtpRequired = true;
+  // 10. 316L材质(布尔)
+  if (text.match(/316L|316\s*L/i)) params.material = '316L不锈钢';
+  // 11. Ra表面粗糙度
+  const raMatch = text.match(/Ra\s*[≤<=:：]?\s*(\d+\.?\d*)\s*[μu]m/i);
+  if (raMatch) params.raValue = raMatch[1];
+  // 12. FAT/SAT/IQ/OQ/PQ(布尔)
+  if (text.match(/FAT/i)) params.fatRequired = true;
+  if (text.match(/SAT/i)) params.satRequired = true;
+  if (text.match(/IQ.*OQ.*PQ|验证文件/i)) params.validationRequired = true;
+  // 13. 电源
   const powerMatch = text.match(/(\d{3})V\s*[\/]\s*(\d{2,3})Hz/);
   if (powerMatch) { params.voltage = powerMatch[1]; params.frequency = powerMatch[2]; }
-  // Air
+  // 14. 压缩空气
   const airMatch = text.match(/([\d.]+)\s*[~\-至]\s*([\d.]+)\s*MPa/);
   if (airMatch) { params.airPressureMin = airMatch[1]; params.airPressureMax = airMatch[2]; }
-  // 21 CFR Part 11
+  // 15. 21 CFR Part 11
   if (text.match(/21\s*CFR\s*Part\s*11/i)) params.part11Required = true;
+  // 16. 温度范围
+  const tempMatch = text.match(/温度[范围]?\s*[:：]?\s*(\-?\d+)\s*[~\-至]\s*(\-?\d+)\s*[℃°]/);
+  if (tempMatch) { params.tempMin = tempMatch[1]; params.tempMax = tempMatch[2]; }
+  // 17. 温度精度
+  const tempPrecMatch = text.match(/温度.*精度\s*[:：]?\s*±(\d+\.?\d*)\s*℃/);
+  if (tempPrecMatch) params.tempPrecision = tempPrecMatch[1];
+  // 18. 湿度范围
+  const humidityMatch = text.match(/湿度[范围]?\s*[:：]?\s*(\d+)\s*[~\-至%]\s*(\d+)\s*%?\s*RH/i);
+  if (humidityMatch) { params.humidityMin = humidityMatch[1]; params.humidityMax = humidityMatch[2]; }
+  // 19. 湿度精度
+  const humPrecMatch = text.match(/湿度.*精度\s*[:：]?\s*±(\d+)\s*%?\s*RH/i);
+  if (humPrecMatch) params.humidityPrecision = humPrecMatch[1];
+  // 20. 风速
+  const airSpeedMatch = text.match(/风速[范围]?\s*[:：]?\s*(\d+\.?\d*)\s*[~\-至]\s*(\d+\.?\d*)\s*m\/s/i);
+  if (airSpeedMatch) { params.airSpeedMin = airSpeedMatch[1]; params.airSpeedMax = airSpeedMatch[2]; }
+  // 21. 风量
+  const airflowMatch = text.match(/风量[范围]?\s*[:：]?\s*(\d+)\s*[~\-至]\s*(\d+)\s*m[³3]\/h/i);
+  if (airflowMatch) { params.airflowMin = airflowMatch[1]; params.airflowMax = airflowMatch[2]; }
+  // 22. 换气次数
+  const achMatch = text.match(/换气次数[范围]?\s*[:：]?\s*(\d+)\s*[~\-至]\s*(\d+)\s*次\/h/i);
+  if (achMatch) { params.achMin = achMatch[1]; params.achMax = achMatch[2]; }
+  // 23. 噪声dB
+  const noiseMatch = text.match(/噪声[范围]?\s*[:：]?\s*[≤<=]?\s*(\d+)\s*dB/i);
+  if (noiseMatch) params.noise = noiseMatch[1];
+  // 24. 照度Lux
+  const luxMatch = text.match(/照度[范围]?\s*[:：]?\s*[≥>=]?\s*(\d+)\s*Lux/i);
+  if (luxMatch) params.lux = luxMatch[1];
+  // 25. 振动
+  const vibMatch = text.match(/振动[范围]?\s*[:：]?\s*[≤<=]?\s*(\d+\.?\d*)\s*mm\/s/i);
+  if (vibMatch) params.vibration = vibMatch[1];
+  // 26. 气密性泄漏率
+  const leakMatch = text.match(/泄漏率[范围]?\s*[:：]?\s*[≤<=]?\s*(\d+\.?\d*)\s*Pa\/min/i);
+  if (leakMatch) params.leakRate = leakMatch[1];
+  // 27. VHP浓度
+  const vhpConcMatch = text.match(/VHP.*浓度[范围]?\s*[:：]?\s*(\d+)\s*[~\-至]\s*(\d+)\s*ppm/i);
+  if (vhpConcMatch) { params.vhpConcMin = vhpConcMatch[1]; params.vhpConcMax = vhpConcMatch[2]; }
+  // 28. 灭菌时间
+  const sterTimeMatch = text.match(/灭菌时间[范围]?\s*[:：]?\s*(\d+)\s*[~\-至]\s*(\d+)\s*min/i);
+  if (sterTimeMatch) { params.sterTimeMin = sterTimeMatch[1]; params.sterTimeMax = sterTimeMatch[2]; }
+  // 29. 过滤器效率
+  const filterEffMatch = text.match(/过滤器.*效率\s*[:：]?\s*[≥>=]?\s*(\d+\.?\d*)\s*%/i);
+  if (filterEffMatch) params.filterEfficiency = filterEffMatch[1];
+  // 30. 过滤器等级
+  const filterClassMatch = text.match(/过滤器.*等级\s*[:：]?\s*(H\d+|U\d+)/i);
+  if (filterClassMatch) params.filterClass = filterClassMatch[1];
+  // 31. 生物指示剂D值
+  const dValueMatch = text.match(/D值[范围]?\s*[:：]?\s*(\d+\.?\d*)\s*min/i);
+  if (dValueMatch) params.dValue = dValueMatch[1];
+  // 32. 粒子计数限值
+  const particleMatch = text.match(/粒子[计数限值]?\s*[:：]?\s*[≤<=]?\s*(\d+)\s*个\/m[³3]/i);
+  if (particleMatch) params.particleLimit = particleMatch[1];
+  // 33. 压差梯度
+  const gradMatch = text.match(/压差梯度[范围]?\s*[:：]?\s*[≥>=]?\s*(\d+)\s*Pa/i);
+  if (gradMatch) params.pressureGradient = gradMatch[1];
+  // 34. UPS续航
+  const upsMatch = text.match(/UPS.*续航\s*[:：]?\s*[≥>=]?\s*(\d+)\s*min/i);
+  if (upsMatch) params.upsDuration = upsMatch[1];
+  // 35. 接地电阻
+  const groundMatch = text.match(/接地电阻[范围]?\s*[:：]?\s*[≤<=]?\s*(\d+\.?\d*)\s*Ω/i);
+  if (groundMatch) params.groundResistance = groundMatch[1];
+  // 36. EMC等级
+  const emcMatch = text.match(/EMC\s*[等级]?\s*[:：]?\s*(Class\s*[A-D])/i);
+  if (emcMatch) params.emcClass = emcMatch[1];
+  // 37. 消毒剂兼容性
+  if (text.match(/消毒剂兼容|消毒剂|酒精|异丙醇|过氧化氢消毒/i)) params.disinfectantCompat = true;
+  // 38. 功率
+  const powerKwMatch = text.match(/功率[范围]?\s*[:：]?\s*(\d+\.?\d*)\s*[~\-至]?\s*(\d+\.?\d*)?\s*kW/i);
+  if (powerKwMatch) params.powerKW = powerKwMatch[1];
+  // 39. 冷却水
+  if (text.match(/冷却水| chilled water|冷却/i)) params.coolingWater = true;
+  // 40. 纯化水
+  if (text.match(/纯化水|purified water|WFI/i)) params.purifiedWater = true;
+  // 41. 氮气
+  if (text.match(/氮气|nitrogen|N2/i)) params.nitrogen = true;
+  // 42. 压缩空气露点
+  const dewPointMatch = text.match(/露点[范围]?\s*[:：]?\s*[≤<=]?\s*[-]?(\d+)\s*[℃°]/i);
+  if (dewPointMatch) params.dewPoint = dewPointMatch[1];
+  // 43. 生物去污效率
+  const deconEffMatch = text.match(/去污效率|灭活效率\s*[:：]?\s*[≥>=]?\s*(\d+)\s*log/i);
+  if (deconEffMatch) params.deconEfficiency = deconEffMatch[1];
+  // 44. 残留量
+  const residueMatch = text.match(/残留[量浓度]?\s*[:：]?\s*[≤<=]?\s*(\d+\.?\d*)\s*ppm/i);
+  if (residueMatch) params.residue = residueMatch[1];
 
   return params;
 }
 
 function renderParamAdjust(params) {
   const area = document.getElementById('paramAdjustArea');
-  let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">';
-  const fieldDefs = [
+  // 判断当前设备类型是否为负压类（OEL/OEB仅适用于负压类）
+  const equipTypes = getSelectedEquipTypes();
+  const primaryType = equipTypes.length > 0 ? equipTypes[0] : (state.parsedEquipTypes[0] || 'sterile');
+  const isNegativeType = (primaryType === 'sterile_negative' || primaryType === 'negative');
+  let fieldDefs = [
     { key: 'workAreaLength', label: '工作区长度(mm)' },
     { key: 'workAreaDepth', label: '工作区深度(mm)' },
     { key: 'workAreaHeight', label: '工作区高度(mm)' },
@@ -1465,9 +1574,14 @@ function renderParamAdjust(params) {
     { key: 'pressureMax', label: '压力上限(Pa)' },
     { key: 'cleanClass', label: '洁净等级', type: 'select', options: ['ISO 5级','ISO 7级','ISO 8级'] },
     { key: 'gloveCount', label: '手套数量' },
-    { key: 'material', label: '主体材质', type: 'select', options: ['316L不锈钢','304不锈钢'] },
-    { key: 'oel', label: 'OEL要求(μg/m³)' }
+    { key: 'material', label: '主体材质', type: 'select', options: ['316L不锈钢','304不锈钢'] }
   ];
+  // 仅负压类显示OEL/OEB输入框
+  if (isNegativeType) {
+    fieldDefs.push({ key: 'oel', label: 'OEL要求(μg/m³)' });
+    fieldDefs.push({ key: 'oeb', label: 'OEB等级' });
+  }
+  let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">';
   for (const f of fieldDefs) {
     const val = params[f.key] || '';
     html += `<div><label class="form-label" style="font-size:0.7rem; margin-top:4px;">${f.label}</label>`;
@@ -1481,6 +1595,9 @@ function renderParamAdjust(params) {
       html += `<input class="form-input param-field" data-key="${f.key}" value="${val}" style="font-size:0.75rem; padding:4px 6px;" />`;
     }
     html += '</div>';
+  }
+  if (!isNegativeType) {
+    html += '<div style="grid-column:1/-1; font-size:0.68rem; color:#a0aec0; padding:4px 0;">OEL/OEB参数仅适用于负压类隔离器（无菌负压/非无菌负压），当前设备类型不配置OEL/OEB。</div>';
   }
   html += '</div>';
   area.innerHTML = html;
@@ -1526,89 +1643,442 @@ function splitURSItems(text) {
 
 function classifyRequirement(text) {
   const lower = text.toLowerCase();
-  if (/压力|pressure|洁净|iso\s*\d|温度|temp|湿度|humidity|气流|airflow|压差|differential pressure/.test(lower)) return '性能参数 / Performance';
-  if (/材质|material|不锈钢|stainless|ra|密封|seal|焊接|weld|表面|surface/.test(lower)) return '材质结构 / Construction';
-  if (/验证|validation|iq|oq|pq|fat|sat|确认|qualification|验证文件/.test(lower)) return '验证确认 / Validation';
-  if (/安全|safety|报警|alarm|互锁|interlock|联锁|紧急|emergency|保护|protection/.test(lower)) return '安全联锁 / Safety';
-  if (/控制|control|hmi|plc|scada|part\s*11|电子记录|electronic record|审计|audit/.test(lower)) return '控制系统 / Control';
-  if (/文件|document|手册|manual|图纸|drawing|证书|certificate|文档|dqb/.test(lower)) return '文件资料 / Documentation';
-  if (/电源|power|压缩空气|compressed air|vacuum|公用|utility/.test(lower)) return '公用工程 / Utility';
-  if (/vhp|灭菌|steriliz|消毒|decon|灭菌循环|sterilization cycle/.test(lower)) return '灭菌系统 / Sterilization';
-  if (/手套|glove|rtp|传递|transfer|物料|material/.test(lower)) return '物料传递 / Material Transfer';
-  if (/监测|monitoring|采样|sampling|粒子|particle|微生物|microbial|环境监测/.test(lower)) return '环境监测 / EM';
-  if (/交付|delivery|周期|lead time|培训|training|售后|after.sales|质保|warranty|服务|service/.test(lower)) return '交付服务 / Service';
-  return '其他 / Other';
+  // 性能参数子类
+  if (/尺寸|长度|宽度|高度|长×宽|L\d.*D\d.*H\d/i.test(lower)) return '性能参数-尺寸参数';
+  if (/温度|temp|湿度|humidity/.test(lower)) return '性能参数-温湿度';
+  if (/风速|风量|airflow|换气|单向流|unidirectional/.test(lower)) return '性能参数-风速风量';
+  if (/压力|pressure|压差|differential/.test(lower)) return '性能参数-压力压差';
+  if (/洁净|iso\s*\d|class\s*100|百级/.test(lower)) return '性能参数-洁净等级';
+  if (/噪声|noise|dB/.test(lower)) return '性能参数-噪声';
+  if (/照度|lux|照明|illumination/.test(lower)) return '性能参数-照度';
+  if (/振动|vibration/.test(lower)) return '性能参数-振动';
+  if (/气密|泄漏率|leak|leakage/.test(lower)) return '性能参数-气密性';
+  // 材质结构子类
+  if (/材质|material|不锈钢|stainless|316L|304/.test(lower)) return '材质结构-材料材质';
+  if (/ra|粗糙度|表面|surface|电解抛光|electropolish/.test(lower)) return '材质结构-表面处理';
+  if (/密封|seal|焊接|weld|焊缝/.test(lower)) return '材质结构-密封焊接';
+  if (/视窗|观察窗|viewing|window|玻璃/.test(lower)) return '材质结构-视窗结构';
+  // 验证确认子类
+  if (/DQ|设计确认|design qualification/i.test(lower)) return '验证确认-DQ';
+  if (/IQ|安装确认|installation qualification/i.test(lower)) return '验证确认-IQ';
+  if (/OQ|运行确认|operational qualification/i.test(lower)) return '验证确认-OQ';
+  if (/PQ|性能确认|performance qualification/i.test(lower)) return '验证确认-PQ';
+  if (/FAT|SAT|工厂验收|现场验收/.test(lower)) return '验证确认-FAT/SAT';
+  if (/CSV|计算机系统验证|GAMP|computer system validation/i.test(lower)) return '验证确认-CSV';
+  if (/灭菌验证|BI验证|生物指示剂验证|sterilization validation|半周期|全周期|杀孢子/i.test(lower)) return '验证确认-灭菌验证';
+  if (/过滤器完整性|PAO|DOP|filter integrity|检漏/i.test(lower)) return '验证确认-过滤器完整性验证';
+  if (/气密性测试|泄漏测试|leak test/i.test(lower)) return '验证确认-气密性测试验证';
+  if (/清洁验证|消毒验证|cleaning validation|disinfection/i.test(lower)) return '验证确认-清洁消毒验证';
+  if (/培养基模拟灌装|media fill/i.test(lower)) return '验证确认-培养基模拟灌装';
+  if (/过滤器验证|filter validation|HEPA验证/i.test(lower)) return '验证确认-过滤器验证';
+  // 安全联锁子类
+  if (/互锁|interlock|联锁/.test(lower)) return '安全联锁-互锁系统';
+  if (/报警|alarm/.test(lower)) return '安全联锁-报警系统';
+  if (/紧急|emergency|急停|emergency stop/.test(lower)) return '安全联锁-紧急功能';
+  if (/BIBO|袋进袋出|bag-in|bag-out|安全更换/i.test(lower)) return '安全联锁-BIBO安全更换';
+  // 控制系统子类
+  if (/数据完整性|ALCOA|data integrity/i.test(lower)) return '控制系统-数据完整性';
+  if (/审计追踪|audit trail/i.test(lower)) return '控制系统-审计追踪';
+  if (/电子签名|electronic signature|21\s*CFR\s*Part\s*11/i.test(lower)) return '控制系统-电子签名';
+  if (/权限|access level|三级权限|password/i.test(lower)) return '控制系统-权限管理';
+  if (/HMI|人机界面|触摸屏|touchscreen/i.test(lower)) return '控制系统-HMI界面';
+  if (/SCADA|PLC|OPC\s*UA/i.test(lower)) return '控制系统-SCADA/PLC通信';
+  if (/MES|EBR|ERP|对接|接口|interface/i.test(lower)) return '控制系统-MES/EBR对接';
+  // 灭菌系统子类
+  if (/VHP|汽化双氧水|汽化过氧化氢|过氧化氢灭菌/i.test(lower)) return '灭菌系统-VHP灭菌';
+  if (/CIP|在线清洗|clean.in.place/i.test(lower)) return '灭菌系统-CIP在线清洗';
+  if (/SIP|在线灭菌|sterilize.in.place/i.test(lower)) return '灭菌系统-SIP在线灭菌';
+  if (/除菌过滤|0\.22|sterilizing filtration/i.test(lower)) return '灭菌系统-除菌过滤';
+  if (/VHP浓度|灭菌时间|灭菌循环|sterilization cycle|灭菌效果|SAL/i.test(lower)) return '灭菌系统-灭菌参数';
+  // 物料传递子类
+  if (/RTP|快速转移|rapid transfer|α.*β/i.test(lower)) return '物料传递-RTP快速转移';
+  if (/手套|glove/i.test(lower)) return '物料传递-手套系统';
+  if (/传递窗|pass.through|传递舱/i.test(lower)) return '物料传递-传递窗';
+  // 公用工程子类
+  if (/电源|power|电压|voltage|380V|220V/i.test(lower)) return '公用工程-电力供应';
+  if (/压缩空气|compressed air|露点|dew point/i.test(lower)) return '公用工程-压缩空气';
+  if (/UPS|不间断电源|uninterruptible/i.test(lower)) return '公用工程-UPS不间断电源';
+  if (/接地|防雷|grounding|接地电阻|SPD/i.test(lower)) return '公用工程-接地防雷';
+  if (/EMC|电磁兼容|electromagnetic/i.test(lower)) return '公用工程-EMC电磁兼容';
+  if (/氮气|nitrogen|惰性气体|inert gas/i.test(lower)) return '公用工程-氮气保护';
+  if (/纯化水|purified water|WFI|注射用水/i.test(lower)) return '公用工程-工艺用水';
+  if (/冷却水|cooling water|chilled/i.test(lower)) return '公用工程-冷却水';
+  // 环境监测子类
+  if (/粒子|particle|粒子计数|particle counter/i.test(lower)) return '环境监测-粒子监测';
+  if (/微生物|microbial|浮游菌|沉降菌|surface sampling/i.test(lower)) return '环境监测-微生物监测';
+  if (/OEL|OEB|职业接触|occupational exposure/i.test(lower)) return '环境监测-OEL/OEB监测';
+  if (/毒性|toxic|hazardous|残留监测/i.test(lower)) return '环境监测-毒性残留监测';
+  // 文件资料子类
+  if (/手册|manual|操作手册|维护手册/i.test(lower)) return '文件资料-手册文档';
+  if (/图纸|drawing|P&ID|平面图/i.test(lower)) return '文件资料-工程图纸';
+  if (/证书|certificate|材质证书|COA/i.test(lower)) return '文件资料-证书文件';
+  if (/备件|spare parts|易损件/i.test(lower)) return '文件资料-备件清单';
+  // 交付服务子类
+  if (/交付|delivery|周期|lead time/i.test(lower)) return '交付服务-交付周期';
+  if (/培训|training/i.test(lower)) return '交付服务-培训服务';
+  if (/质保|warranty|保修|售后|after.sales/i.test(lower)) return '交付服务-质保售后';
+  if (/安装调试|installation.*commissioning/i.test(lower)) return '交付服务-安装调试';
+  if (/远程支持|remote support|VPN|远程诊断/i.test(lower)) return '交付服务-远程支持';
+  return '其他-其他需求';
 }
 
 function determineResponse(text, equipType) {
   const lower = text.toLowerCase();
-  // Things we definitely comply with for isolators
-  if (/正压|positive pressure|iso\s*5|vhp|手套|glove|316L|报警|alarm|hmi|环境监测|environmental monitoring|洁净|clean|rtp|快速转移/.test(lower)) return '满足';
-  if (/负压|negative pressure|oel|bibo|高活性|high potent/.test(lower) && equipType === 'negative') return '满足';
-  if (/负压|negative pressure|oel|bibo|高活性|high potent/.test(lower) && equipType !== 'negative') return '部分满足';
-  if (/整线|integrated line|联动|interlocked|多工位|multi.station|传送|conveyor/.test(lower) && equipType === 'integrated') return '满足';
-  if (/整线|integrated line|联动|interlocked|多工位|multi.station|传送|conveyor/.test(lower) && equipType !== 'integrated') return '部分满足';
-  if (/21\s*cfr\s*part\s*11/.test(lower)) return '满足';
-  if (/fat|sat|iq|oq|pq|验证|validation/.test(lower)) return '满足';
-  if (/电源|power supply|压缩空气|compressed air|公用|utility/.test(lower)) return '满足';
-  if (/交付|delivery|周期|lead time|培训|training|售后|after.sales|质保|warranty/.test(lower)) return '满足';
+  const isNegativeType = (equipType === 'sterile_negative' || equipType === 'negative');
+
+  // 分支1: 天然满足 — 正压/ISO5/VHP/手套/316L/报警/HMI/环境监测
+  if (/正压|positive pressure|iso\s*5|class\s*100|vhp|汽化双氧水|手套|glove|316L|报警|alarm|hmi|人机界面|环境监测|environmental monitoring|洁净|clean|rtp|快速转移/.test(lower)) {
+    if (/rtp|快速转移/.test(lower)) {
+      // 分支29: RTP适用性判断（按需配置）
+      if (equipType === 'vhp') return '不适用';
+      return '满足';
+    }
+    return '满足';
+  }
+
+  // 分支2: 负压/OEL/BIBO看类型
+  if (/负压|negative pressure|oel|bibo|袋进袋出|高活性|high potent|高毒/.test(lower)) {
+    if (/bibo|袋进袋出/.test(lower)) {
+      // 分支19: BIBO适用性
+      if (equipType === 'sterile_negative') return '满足';
+      if (equipType === 'negative') return '部分满足';
+      return '不适用';
+    }
+    if (/oel|oeb|职业接触/.test(lower)) {
+      // 分支9: OEL分级判断 — 仅对负压类生效
+      if (isNegativeType) return '满足';
+      return '不适用';
+    }
+    // 负压防护
+    if (equipType === 'sterile_negative') return '满足';
+    if (equipType === 'negative') return '满足';
+    if (equipType === 'sterile') return '部分满足';
+    if (equipType === 'vhp') return '不适用';
+    if (equipType === 'integrated') return '部分满足';
+  }
+
+  // 分支3: 整线/联动看类型
+  if (/整线|integrated line|联动|interlocked|多工位|multi.station|传送|conveyor/.test(lower)) {
+    if (equipType === 'integrated') return '满足';
+    return '部分满足';
+  }
+
+  // 分支4: Part11/验证
+  if (/21\s*cfr\s*part\s*11|电子记录|电子签名|审计追踪|audit trail/i.test(lower)) return '满足';
+
+  // 分支5: DQ/IQ/OQ/PQ/FAT/SAT验证
+  if (/fat|sat|iq|oq|pq|dq|验证|validation|qualification|确认/i.test(lower)) {
+    if (/灭菌验证|BI验证|生物指示剂验证|sterilization validation|半周期|全周期|杀孢子/i.test(lower)) {
+      // 分支30: 灭菌验证适用性
+      if (equipType === 'negative') return '不适用';
+      return '满足';
+    }
+    return '满足';
+  }
+
+  // 分支6: 电源/交付
+  if (/电源|power supply|压缩空气|compressed air|公用|utility|380V|220V/i.test(lower)) return '满足';
+  if (/交付|delivery|周期|lead time|培训|training|售后|after.sales|质保|warranty/i.test(lower)) return '满足';
+
+  // 分支10: 气密性分级
+  if (/气密性|泄漏率|leak rate|leakage/i.test(lower)) return '满足';
+
+  // 分支11: 温度精度
+  if (/温度.*精度|温度控制|temp.*precision/i.test(lower)) return '满足';
+
+  // 分支12: 湿度精度
+  if (/湿度.*精度|湿度控制|humidity.*precision/i.test(lower)) return '满足';
+
+  // 分支13: 噪声分级
+  if (/噪声|noise|dB/i.test(lower)) return '满足';
+
+  // 分支14: 照度
+  if (/照度|lux|照明|illumination/i.test(lower)) return '满足';
+
+  // 分支15: VHP+负压组合判断
+  if (/vhp.*负压|负压.*vhp|vhp.*negative|negative.*vhp/i.test(lower)) {
+    if (equipType === 'sterile_negative') return '满足';
+    if (equipType === 'negative') return '部分满足';
+    if (equipType === 'sterile') return '部分满足';
+    if (equipType === 'vhp') return '不适用';
+    if (equipType === 'integrated') return '部分满足';
+  }
+
+  // 分支16: 灌装功能
+  if (/灌装|filling/i.test(lower)) {
+    if (equipType === 'vhp') return '不适用';
+    return '满足';
+  }
+
+  // 分支17: CIP/SIP
+  if (/CIP|SIP|在线清洗|在线灭菌|clean.in.place|sterilize.in.place/i.test(lower)) {
+    if (equipType === 'vhp') return '不适用';
+    return '满足';
+  }
+
+  // 分支18: 培养基模拟灌装
+  if (/培养基模拟灌装|media fill/i.test(lower)) {
+    if (equipType === 'vhp' || equipType === 'negative') return '不适用';
+    if (equipType === 'integrated') return '满足';
+    return '部分满足';
+  }
+
+  // 分支20: 氮气保护
+  if (/氮气|nitrogen|惰性气体|inert gas/i.test(lower)) {
+    if (equipType === 'vhp') return '不适用';
+    return '满足';
+  }
+
+  // 分支21: MES/EBR对接
+  if (/MES|EBR|ERP|对接|接口|interface/i.test(lower)) return '部分满足';
+
+  // 分支22: UPS续航
+  if (/UPS|不间断电源|uninterruptible/i.test(lower)) return '满足';
+
+  // 分支23: EMC
+  if (/EMC|电磁兼容|electromagnetic/i.test(lower)) return '满足';
+
+  // 分支24: 灭菌时间
+  if (/灭菌时间|sterilization time|cycle time/i.test(lower)) return '满足';
+
+  // 分支25: 去污效率
+  if (/去污效率|灭活效率|decontamination efficiency|log/i.test(lower)) return '满足';
+
+  // 分支26: 过滤器效率
+  if (/过滤器.*效率|filter.*efficiency|HEPA/i.test(lower)) return '满足';
+
+  // 分支27: 换气次数
+  if (/换气次数|air change/i.test(lower)) return '满足';
+
+  // 分支28: 压差梯度
+  if (/压差梯度|pressure cascade|pressure gradient/i.test(lower)) return '满足';
+
+  // 分支29(补充): RTP场景B — OEB5级
+  if (/oeb\s*5|oeb5|oel.*0\.1|oel.*1μg/i.test(lower)) {
+    if (isNegativeType) return '满足';
+    return '不适用';
+  }
+
+  // 兜底: 默认满足
   return '满足';
 }
 
 function generateTechNote(text, equipType) {
   const lower = text.toLowerCase();
   const notes = [];
+  const isNegativeType = (equipType === 'sterile_negative' || equipType === 'negative');
 
+  // 领域1: 正压防护
   if (/正压|positive pressure/.test(lower)) {
-    notes.push('[CN] 设备采用正压气流屏障设计，通过变频风机维持工作区相对背景环境+10~+50Pa正压差，压力传感器实时监测，PLC自动调节风机转速补偿压差偏差。[EN] Positive pressure barrier design with VFD-controlled supply fan, maintaining +10 to +50Pa differential pressure relative to background. Pressure monitored in real-time by sensors with PLC auto-adjustment of fan speed to compensate deviations.');
+    notes.push('[CN] 设备采用正压气流屏障设计，变频风机维持工作区+10~+50Pa正压差，压力传感器实时监测，PLC自动调节。新风采用桶式过滤器（H14级），排风采用PUSH-PUSH过滤器（袋进袋出式）。[EN] Positive pressure barrier with VFD fan maintaining +10~+50Pa differential, real-time PLC control. Supply: cartridge filter (H14); exhaust: PUSH-PUSH filter (bag-in bag-out).');
   }
+  // 领域2: ISO5洁净度
   if (/iso\s*5|class\s*100|百级/.test(lower)) {
-    notes.push('[CN] 工作区采用垂直单向流设计，HEPA过滤器效率≥99.995%（MPPS），在线扫描检漏合格。操作区静态洁净度达到ISO 5级（≥0.5μm粒子≤3,520个/m³），动态条件下维持ISO 5级。[EN] Vertical unidirectional airflow design with HEPA filters ≥99.995% efficiency (MPPS) and in-situ scan leak testing. Static cleanliness achieves ISO 5 (≥0.5μm particles ≤3,520/m³), maintained under dynamic conditions.');
+    notes.push('[CN] 工作区垂直单向流，HEPA效率≥99.995%（MPPS），静态ISO 5级（≥0.5μm粒子≤3,520/m³）。新风桶式过滤器+排风PUSH-PUSH过滤器，均H14级。[EN] Vertical unidirectional flow, HEPA≥99.995% (MPPS), static ISO 5. Supply: cartridge filter; exhaust: PUSH-PUSH filter, both H14.');
   }
-  if (/vhp|灭菌|steriliz/.test(lower)) {
-    notes.push('[CN] 配备集成式VHP发生器，采用汽化过氧化氢灭菌工艺。典型灭菌参数：H₂O₂浓度2-8ml/m³，灭菌温度25-50°C可调，灭菌时间60-120min可调，灭菌效果达到SAL 10⁻⁶。残气催化分解至H₂O₂浓度<1ppm。[EN] Integrated VHP generator with vaporized hydrogen peroxide sterilization. Typical parameters: H₂O₂ concentration 2-8ml/m³, temperature 25-50°C adjustable, cycle time 60-120min adjustable, achieving SAL 10⁻⁶. Residual vapor catalytically decomposed to <1ppm H₂O₂.');
+  // 领域3: VHP灭菌
+  if (/vhp|汽化双氧水|汽化过氧化氢|过氧化氢灭菌/i.test(lower)) {
+    notes.push('[CN] 配备集成式VHP发生器，H₂O₂浓度2-8ml/m³，灭菌温度25-50°C，时间60-120min可调，SAL 10⁻⁶。残气催化分解至<1ppm。[EN] Integrated VHP generator, H₂O₂ 2-8ml/m³, temp 25-50°C, cycle 60-120min, SAL 10⁻⁶. Residual <1ppm after catalytic decomposition.');
   }
-  if (/手套|glove/.test(lower)) {
-    notes.push('[CN] 配备重症监护级无菌手套，手套接口符合ISO 14644-7标准。手套完整性检测系统采用压力衰减法，最小可检漏率1×10⁻⁴ Pa·m³/s，满足EU GMP Annex 1手套检漏要求。[EN] ICU-grade sterile gloves with ports compliant to ISO 14644-7. Glove integrity test system using pressure decay method, minimum detectable leak rate 1×10⁻⁴ Pa·m³/s, meeting EU GMP Annex 1 glove integrity requirements.');
+  // 领域4: 手套系统
+  if (/手套|glove/i.test(lower)) {
+    notes.push('[CN] ICU级无菌手套，接口符合ISO 14644-7。压力衰减法检漏，最小可检1×10⁻⁴ Pa·m³/s，满足EU GMP Annex 1要求。[EN] ICU-grade sterile gloves, ISO 14644-7 ports. Pressure decay leak test, min detectable 1×10⁻⁴ Pa·m³/s, per EU GMP Annex 1.');
   }
-  if (/rtp|快速转移|rapid transfer/.test(lower)) {
-    notes.push('[CN] 配置RTP（Rapid Transfer Port）快速转移端口，α-β对接系统，对接过程保持密封完整性，物料转移时不破坏隔离器内部洁净环境。[EN] RTP (Rapid Transfer Port) with α-β docking system, maintaining seal integrity during docking. Material transfer without compromising the isolator internal clean environment.');
+  // 领域5: RTP快速转移（按需配置）
+  if (/rtp|快速转移|rapid transfer/i.test(lower)) {
+    notes.push('[CN] RTP快速转移端口，α-β阀对接（ISO 14644-7），密封圈寿命≥500次。按需配置：①需无菌传进传出时标配RTP接口；②OEB5级（OEL<1μg/m³）时建议配置RTP。VHP传递窗不适用RTP。[EN] RTP with α-β valve (ISO 14644-7), seal life≥500 cycles. On-demand: ①sterile transfer; ②OEB5 (OEL<1μg/m³). Not applicable for VHP pass-through.');
   }
+  // 领域6: 316L材质
   if (/316L/.test(lower)) {
-    notes.push('[CN] 工作区内壁及所有工艺接触面采用316L不锈钢制造，内表面电解抛光至Ra≤0.4μm，圆角过渡R≥3mm，无卫生死角，符合cGMP洁净表面要求。[EN] Internal walls and all product-contact surfaces manufactured from 316L stainless steel, electropolished to Ra≤0.4μm, with radiused corners R≥3mm, no dead legs, meeting cGMP clean surface requirements.');
+    notes.push('[CN] 工艺接触面316L不锈钢，电解抛光Ra≤0.4μm，圆角R≥3mm，无卫生死角，符合cGMP。[EN] 316L SS product-contact surfaces, electropolished Ra≤0.4μm, R≥3mm, no dead legs, cGMP compliant.');
   }
-  if (/报警|alarm/.test(lower)) {
-    notes.push('[CN] 配置分级报警系统：一级报警（压力偏差超限、门未关、VHP浓度异常）触发声光报警并记录；二级报警（风机故障、过滤器压差超限）触发紧急停机保护。所有报警事件记录于审计追踪系统。[EN] Tiered alarm system: Level 1 (pressure deviation, door open, VHP concentration abnormal) triggers audible/visual alarm with logging; Level 2 (fan failure, filter differential pressure exceedance) triggers emergency shutdown. All events recorded in audit trail.');
+  // 领域7: 报警系统
+  if (/报警|alarm/i.test(lower)) {
+    notes.push('[CN] 分级报警：一级（压力偏差/门未关/VHP异常）声光报警并记录；二级（风机故障/过滤器堵塞）紧急停机。全部事件审计追踪。[EN] Tiered alarms: L1 (pressure/door/VHP) audiovisual+log; L2 (fan/filter) emergency shutdown. Full audit trail.');
   }
-  if (/hmi|人机界面|human machine/.test(lower)) {
-    notes.push('[CN] 配备10英寸工业触摸屏HMI，基于SCADA系统架构，符合21 CFR Part 11电子记录与电子签名要求。具备三级权限管理（操作员/工艺员/管理员）、审计追踪、电子签名、数据备份功能。[EN] 10-inch industrial touchscreen HMI with SCADA architecture, compliant with 21 CFR Part 11 for electronic records and signatures. Three-tier access control (Operator/Technician/Administrator), full audit trail, electronic signatures, and data backup.');
+  // 领域8: HMI人机界面
+  if (/hmi|人机界面|human machine/i.test(lower)) {
+    notes.push('[CN] 10寸工业触摸屏HMI，SCADA架构，符合21 CFR Part 11。三级权限、审计追踪、电子签名、数据备份。[EN] 10" industrial touchscreen HMI, SCADA architecture, 21 CFR Part 11 compliant. 3-tier access, audit trail, e-signature, backup.');
   }
-  if (/环境监测|采样|environmental monitoring|sampling/.test(lower)) {
-    notes.push('[CN] 预留活性粒子采样口（微生物采样器接口）及非活性粒子采样口（粒子计数器接口），支持在线监测系统集成。采样口位置按EU GMP Annex 1要求布置于关键操作区域。[EN] Viable particle sampling ports (microbial sampler interface) and non-viable particle sampling ports (particle counter interface), supporting online monitoring system integration. Sampling locations positioned in critical operation zones per EU GMP Annex 1 requirements.');
+  // 领域9: 环境监测
+  if (/环境监测|采样|environmental monitoring|sampling/i.test(lower)) {
+    notes.push('[CN] 预留活性粒子采样口（微生物采样器接口）及非活性粒子采样口（粒子计数器接口），按EU GMP Annex 1布置于关键操作区。[EN] Viable and non-viable particle sampling ports, positioned in critical zones per EU GMP Annex 1.');
   }
-  if (/负压|negative pressure/.test(lower)) {
-    notes.push('[CN] 采用负压气流屏障设计，通过变频排风系统维持工作区相对背景环境-10~-50Pa负压差。双重HEPA排风过滤（效率≥99.995% MPPS），支持在线扫描检漏。BIBO（袋进袋出）安全更换过滤器，操作人员无需接触污染过滤器。[EN] Negative pressure barrier design with VFD-controlled exhaust system, maintaining -10 to -50Pa differential pressure relative to background. Dual HEPA exhaust filtration (≥99.995% MPPS) with in-situ scan leak testing. BIBO (Bag-In/Bag-Out) safe filter change, operators never contact contaminated filters.');
+  // 领域10: 负压防护（区分sterile_negative和negative）
+  if (/负压|negative pressure|防护|containment/i.test(lower)) {
+    if (equipType === 'sterile_negative') {
+      notes.push('[CN] 无菌负压双重设计：内部正压+10~+30Pa维持ISO 5洁净，整体负压-30~-10Pa防护高毒物料。新风桶式过滤器+排风PUSH-PUSH过滤器+BIBO安全更换。使用场景：带活性或毒性的药品在无菌环境下操作（灌装/分装/称量等）。[EN] Sterile negative dual design: internal +10~+30Pa (ISO 5), external -30~-10Pa containment. Supply: cartridge filter; exhaust: PUSH-PUSH+BIBO. For toxic+sterile operations.');
+    } else if (equipType === 'negative') {
+      notes.push('[CN] 纯防护负压设计，舱内-30~-10Pa，不要求内部无菌。新风桶式过滤器+排风PUSH-PUSH过滤器。BIBO暂未配置（需定制）。[EN] Containment-only negative pressure, -30~-10Pa, non-sterile. Supply: cartridge filter; exhaust: PUSH-PUSH filter. BIBO not configured (custom required).');
+    } else {
+      notes.push('[CN] 负压防护设计，变频排风维持-10~-50Pa负压差。排风PUSH-PUSH过滤器（袋进袋出式）。[EN] Negative pressure containment, VFD exhaust -10~-50Pa. Exhaust: PUSH-PUSH filter (bag-in bag-out).');
+    }
   }
-  if (/oel/.test(lower)) {
-    notes.push('[CN] 设备设计满足OEL <1μg/m³的密闭防护要求，采用负压气密舱体+双重HEPA过滤+气闸缓冲的多级防护策略。设备外表面擦拭试验符合OEB 4/5级要求。[EN] Equipment designed to meet containment requirements for OEL <1μg/m³, using multi-barrier strategy: negative pressure sealed chamber + dual HEPA filtration + airlock buffer. External surface wipe tests comply with OEB 4/5 requirements.');
+  // 领域11: OEL控制（仅负压类）
+  if (/oel|oeb|职业接触|occupational exposure/i.test(lower)) {
+    if (isNegativeType) {
+      notes.push('[CN] OEL/OEB控制仅适用于负压类。密闭隔离+负压+排风高效过滤三重防护。OEB4级→负压-20Pa+双级H14；OEB5级→负压-30Pa+双级H14+BIBO；OEB6级→+RTP密闭转移。操作位OEL可控至0.01μg/m³。[EN] OEL/OEB control for negative types only. 3-barrier: seal+negative pressure+HEPA exhaust. OEB4: -20Pa+dual H14; OEB5: -30Pa+dual H14+BIBO; OEB6: +RTP. Operator OEL to 0.01μg/m³.');
+    } else {
+      notes.push('[CN] OEL/OEB参数不适用于本类型设备（非负压类不配置OEL/OEB控制）。[EN] OEL/OEB parameters not applicable for this equipment type (non-negative pressure type).');
+    }
   }
-  if (/整线|联动|integrated line|interlock/.test(lower)) {
-    notes.push('[CN] 采用模块化整线设计，灌装工位、轧盖工位、称重工位一体化集成，传送系统采用洁净级传送带/推杆联动。全线VHP一体化灭菌或分区独立灭菌可选，中央PLC统一控制各工位时序联动。[EN] Modular integrated line design with filling, capping, and weighing stations in one barrier system. Clean-grade conveyor/pusher transfer system. Option for whole-line integrated VHP sterilization or zoned independent sterilization. Central PLC for synchronized station timing.');
+  // 领域12: 整线联动
+  if (/整线|联动|integrated line|interlock/i.test(lower)) {
+    notes.push('[CN] 模块化整线设计，灌装/轧盖/称重一体化集成，洁净传送带联动，中央PLC统一时序控制。[EN] Modular integrated line: filling/capping/weighing in one barrier, clean conveyor, central PLC synchronization.');
   }
-  if (/fat|sat/.test(lower)) {
-    notes.push('[CN] 提供完整的FAT/SAT验证方案，FAT在供应商工厂进行主要功能和性能测试，SAT在用户现场进行安装确认和运行确认。验证方案按GMP确认与验证附录及ISPE GAMP 5指南编制。[EN] Comprehensive FAT/SAT protocols provided. FAT conducted at supplier facility for functional and performance testing; SAT at user site for installation and operational verification. Validation protocols per GMP Qualification & Validation Annex and ISPE GAMP 5 guidelines.');
+  // 领域13: FAT/SAT
+  if (/fat|sat/i.test(lower)) {
+    notes.push('[CN] 提供完整FAT/SAT验证方案。FAT在供应商工厂执行功能性能测试，SAT在用户现场执行安装确认和运行确认。按GMP确认与验证附录及ISPE GAMP 5编制。[EN] Complete FAT/SAT protocols. FAT at supplier facility; SAT at user site. Per GMP Qualification Annex and ISPE GAMP 5.');
   }
-  if (/iq|oq|pq/.test(lower)) {
-    notes.push('[CN] 提供DQ/IQ/OQ/PQ全套验证文件包，包括：设计确认（DQ）报告、安装确认（IQ）方案与报告、运行确认（OQ）方案与报告、性能确认（PQ）方案与报告。验证文件符合中国GMP确认与验证附录及EU GMP Annex 15要求。[EN] Complete DQ/IQ/OQ/PQ validation documentation package including: Design Qualification report, Installation Qualification protocol/report, Operational Qualification protocol/report, Performance Qualification protocol/report. Documents comply with China GMP Qualification & Validation Annex and EU GMP Annex 15.');
+  // 领域14: IQ/OQ/PQ（V2.1两项收费引用）
+  if (/iq|oq|pq|dq/i.test(lower)) {
+    notes.push('[CN] DQ/IQ/OQ/PQ全套验证文件包+现场执行。验证文件编制（DQ/IQ/OQ/PQ方案与报告+VMP+SOP+CSV）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性+泄漏测试）合并为"验证文件及服务费"一项收费。详见类别8验证服务模块。[EN] Complete DQ/IQ/OQ/PQ documentation+on-site execution. File preparation (DQ/IQ/OQ/PQ+VMP+SOP+CSV) + on-site execution (IQ/OQ/PQ+filter integrity+leak test) combined into "Validation Documentation & Service Fee". See Category 8.');
   }
-  if (/电源|380|电压|power|voltage/.test(lower)) {
-    notes.push('[CN] 电源要求：AC 380V±10%，50Hz±2%，三相五线制。设备总功率约8-15kW（视配置）。配备UPS不间断电源为控制系统供电，断电后数据保持≥30分钟。[EN] Power requirements: AC 380V±10%, 50Hz±2%, 3-phase 5-wire. Total power approx. 8-15kW (configuration dependent). UPS backup for control system with ≥30min data retention upon power loss.');
+  // 领域15: 电源
+  if (/电源|380|电压|power|voltage/i.test(lower)) {
+    notes.push('[CN] 电源AC 380V±10%，50Hz±2%，三相五线制。总功率8-15kW。UPS不间断电源为标配（续航≥30min）。[EN] Power: AC 380V±10%, 50Hz±2%, 3-phase 5-wire. Total 8-15kW. UPS standard (≥30min backup).');
   }
-  if (/压缩空气|compressed air/.test(lower)) {
-    notes.push('[CN] 压缩空气要求：0.4~0.6MPa，洁净度等级ISO 8573-1 Class 1.4.1（油份≤0.01mg/m³，水份压力露点≤-40°C，固体颗粒≤0.1μm）。配备精密调压阀和洁净过滤器。[EN] Compressed air requirements: 0.4-0.6MPa, cleanliness per ISO 8573-1 Class 1.4.1 (oil ≤0.01mg/m³, water pressure dew point ≤-40°C, solid particles ≤0.1μm). Equipped with precision regulator and clean filters.');
+  // 领域16: 压缩空气
+  if (/压缩空气|compressed air/i.test(lower)) {
+    notes.push('[CN] 压缩空气0.4~0.6MPa，洁净度ISO 8573-1 Class 1.4.1（油≤0.01mg/m³，露点≤-40°C，颗粒≤0.1μm）。精密调压阀+洁净过滤器。[EN] Compressed air 0.4-0.6MPa, ISO 8573-1 Class 1.4.1 (oil≤0.01mg/m³, dew point≤-40°C, particles≤0.1μm). Precision regulator+clean filters.');
   }
-  if (/交付|周期|delivery|lead time/.test(lower)) {
-    notes.push('[CN] 标准方案交付周期16-20周（自合同签订及预付款到账之日起）。含设计确认2-3周、制造10-14周、FAT 1-2周、运输1-2周、现场安装调试2-4周。[EN] Standard delivery lead time: 16-20 weeks (from contract signing and advance payment). Includes design qualification 2-3 weeks, manufacturing 10-14 weeks, FAT 1-2 weeks, shipping 1-2 weeks, on-site installation & commissioning 2-4 weeks.');
+  // 领域17: 风速风量控制（过滤器配置）
+  if (/风速|风量|airflow|单向流|unidirectional/i.test(lower)) {
+    notes.push('[CN] 垂直单向流0.36~0.54m/s（中国GMP附录1第九条）。新风用桶式过滤器（cartridge filter，H14级），排风用PUSH-PUSH过滤器（袋进袋出式，H14级）。EC变频风机，风速波动≤±10%。[EN] Vertical unidirectional flow 0.36-0.54m/s. Supply: cartridge filter (H14); exhaust: PUSH-PUSH filter (bag-in bag-out, H14). EC VFD fan, fluctuation≤±10%.');
+  }
+  // 领域18: 交付周期
+  if (/交付|周期|delivery|lead time/i.test(lower)) {
+    notes.push('[CN] 标准交付16-20周（含设计确认2-3周、制造10-14周、FAT 1-2周、运输1-2周、安装调试2-4周）。[EN] Standard delivery 16-20 weeks (DQ 2-3wk, mfg 10-14wk, FAT 1-2wk, shipping 1-2wk, commissioning 2-4wk).');
+  }
+  // 领域19: 温湿度控制
+  if (/温度|temp|湿度|humidity/i.test(lower)) {
+    notes.push('[CN] 舱内温度18-26℃（±2℃），湿度40-60%RH（±5%），可选配精密温控（±1℃）。温湿度传感器实时监测+记录。[EN] Chamber temp 18-26°C (±2°C), humidity 40-60%RH (±5%), optional precision control (±1°C). Real-time monitoring+logging.');
+  }
+  // 领域20: 噪声控制
+  if (/噪声|noise|dB/i.test(lower)) {
+    notes.push('[CN] 整机运行噪声≤65dB(A)（距设备1m），操作位≤60dB(A)，满足ISO 11201。排风风机低噪音EC电机+消声器。[EN] Overall noise≤65dB(A) @1m, operator≤60dB(A), per ISO 11201. Low-noise EC exhaust motor+muffler.');
+  }
+  // 领域21: 照明
+  if (/照度|lux|照明|illumination/i.test(lower)) {
+    notes.push('[CN] 内部工作面照度≥500Lux，IP65 LED洁净灯，色温5000-6000K，Ra≥85。[EN] Internal illumination≥500Lux, IP65 LED clean light, color temp 5000-6000K, Ra≥85.');
+  }
+  // 领域22: BIBO袋进袋出（仅sterile_negative）
+  if (/bibo|袋进袋出|bag-in|bag-out/i.test(lower)) {
+    if (equipType === 'sterile_negative') {
+      notes.push('[CN] BIBO安全更换系统标配（sterile_negative专属）。排风PUSH-PUSH过滤器配合BIBO（ASHRAE 52.2），PVC保护袋+热封夹，更换无暴露风险。因处理带活性或毒性药品，排风过滤器可能沾染高毒物。[EN] BIBO safe change standard (sterile_negative only). PUSH-PUSH filter+BIBO (ASHRAE 52.2), PVC bag+heat seal, zero exposure. Required for toxic material handling.');
+    } else if (equipType === 'negative') {
+      notes.push('[CN] BIBO安全更换系统暂未配置（需定制）。排风采用PUSH-PUSH过滤器但完整BIBO系统未配置，如需需定制评估。响应判断：部分满足。[EN] BIBO not configured (custom required). PUSH-PUSH filter without full BIBO system. Response: partial compliance.');
+    } else {
+      notes.push('[CN] BIBO不适用于本类型设备（非负压类不涉及高毒物排风BIBO更换）。[EN] BIBO not applicable for this type (non-negative type).');
+    }
+  }
+  // 领域23: 振动控制
+  if (/振动|vibration/i.test(lower)) {
+    notes.push('[CN] 整机振动≤0.5mm/s（ISO 10816），三重减振方案（橡胶减振+弹簧减振+主动平衡）。[EN] Overall vibration≤0.5mm/s (ISO 10816), triple isolation: rubber+spring+active balance.');
+  }
+  // 领域24: 气密性
+  if (/气密性|泄漏率|leak|leakage/i.test(lower)) {
+    notes.push('[CN] 舱体气密性泄漏率≤1.0Pa/min（EN ISO 14644-7，50Pa测试），焊缝氦质谱检漏。负压类≤0.5Pa/min。[EN] Chamber leak rate≤1.0Pa/min (EN ISO 14644-7, 50Pa test), helium leak detection. Negative types≤0.5Pa/min.');
+  }
+  // 领域25: 过滤器完整性测试（过滤器配置）
+  if (/pao|dop|过滤器完整性|完整性测试|filter integrity/i.test(lower)) {
+    notes.push('[CN] 过滤器配置标准：新风桶式过滤器+排风PUSH-PUSH过滤器（袋进袋出式），均H14级。PAO/DOP扫描法检漏，上游10-20μg/L，穿透率≤0.01%。两种过滤器均需完整性测试。[EN] Filter config: supply cartridge+exhaust PUSH-PUSH (bag-in bag-out), both H14. PAO/DOP scan leak test, upstream 10-20μg/L, penetration≤0.01%. Both filters tested.');
+  }
+  // 领域26: 粒子计数
+  if (/粒子|particle|粒子计数/i.test(lower)) {
+    notes.push('[CN] 预留粒子计数器接口，≥0.5μm粒子≤3,520个/m³（ISO 5级静态）。支持在线粒子监测系统集成。[EN] Particle counter interface, ≥0.5μm≤3,520/m³ (ISO 5 static). Online monitoring integration supported.');
+  }
+  // 领域27: 压差梯度
+  if (/压差梯度|pressure cascade|pressure gradient/i.test(lower)) {
+    notes.push('[CN] 各工位间压差梯度≥10Pa递进，PLC自动维持，压差超限联锁报警。梯度方向：清洁侧→污染侧。[EN] Inter-station pressure cascade≥10Pa, PLC auto-maintained, alarm on deviation. Direction: clean→contaminated.');
+  }
+  // 领域28: 数据完整性
+  if (/数据完整性|ALCOA|data integrity/i.test(lower)) {
+    notes.push('[CN] 控制系统符合ALCOA+原则，数据本地SSD+网络双备份，保留≥5年不可删除。[EN] Control system ALCOA+ compliant, local SSD+network backup, retention≥5 years, non-deletable.');
+  }
+  // 领域29: 审计追踪
+  if (/审计追踪|audit trail/i.test(lower)) {
+    notes.push('[CN] 自动记录所有关键操作（参数修改/报警/门开关/灭菌循环/过滤器更换），不可修改删除，支持导出PDF/CSV。[EN] Auto-records all critical operations (param changes/alarms/doors/sterilization/filter changes), non-editable, exportable PDF/CSV.');
+  }
+  // 领域30: 电子签名
+  if (/电子签名|electronic signature|21\s*CFR\s*Part\s*11/i.test(lower)) {
+    notes.push('[CN] 批生产记录电子签名审批，符合21 CFR Part 11.50/11.100/11.200。签名+时间戳+理由码。[EN] Electronic batch record signature, 21 CFR Part 11.50/11.100/11.200 compliant. Signature+timestamp+reason code.');
+  }
+  // 领域31: 三级权限
+  if (/权限|access level|三级权限|password/i.test(lower)) {
+    notes.push('[CN] 操作员/工艺员/管理员三级权限，密码安全策略符合21 CFR Part 11.300。QA放行权限独立（integrated类）。[EN] 3-tier access: Operator/Technician/Administrator, password policy per 21 CFR Part 11.300. Independent QA release (integrated type).');
+  }
+  // 领域32: SCADA/PLC
+  if (/SCADA|PLC/i.test(lower)) {
+    notes.push('[CN] PLC支持OPC UA Server，X.509+TLS 1.2加密。可选配SCADA集中监控（最多32台设备）。[EN] PLC with OPC UA Server, X.509+TLS 1.2. Optional SCADA central monitoring (up to 32 devices).');
+  }
+  // 领域33: OPC UA通信
+  if (/opc\s*ua/i.test(lower)) {
+    notes.push('[CN] PLC支持OPC UA Server，数据上传SCADA/MES，X.509证书+TLS 1.2加密，符合IEC 62541。[EN] PLC OPC UA Server, data upload to SCADA/MES, X.509+TLS 1.2, per IEC 62541.');
+  }
+  // 领域34: MES/EBR对接
+  if (/MES|EBR|ERP/i.test(lower)) {
+    notes.push('[CN] 提供RESTful API/WebService/OPC UA接口，支持Werum/Siemens/SAP MII对接，EBR数据传输。需定制。[EN] RESTful API/WebService/OPC UA interface, Werum/Siemens/SAP MII compatible, EBR data transfer. Custom required.');
+  }
+  // 领域35: CIP在线清洗
+  if (/CIP|在线清洗|clean.in.place/i.test(lower)) {
+    notes.push('[CN] 可选配CIP系统，固定喷球+多步清洗程序（预洗→碱洗→水洗→酸洗→终洗）。[EN] Optional CIP system, fixed spray ball+multi-step cycle (pre-wash→caustic→rinse→acid→final rinse).');
+  }
+  // 领域36: 除菌过滤（过滤器配置）
+  if (/除菌过滤|0\.22|sterilizing filtration|bioburden/i.test(lower)) {
+    notes.push('[CN] 过滤器配置标准：新风桶式过滤器（H14级≥99.995%）+排风PUSH-PUSH过滤器（袋进袋出式H14级）。进风G4预过滤→F8中效→H14桶式高效三级过滤。工艺气体0.22μm除菌过滤。[EN] Filter config: supply cartridge (H14≥99.995%)+exhaust PUSH-PUSH (bag-in bag-out H14). Pre-filtration G4→F8→H14 cartridge. Process gas 0.22μm sterilizing filtration.');
+  }
+  // 领域37: 氮气保护
+  if (/氮气|nitrogen|惰性气体|inert gas/i.test(lower)) {
+    notes.push('[CN] 可选配氮气保护系统，纯度≥99.999%，氧含量≤1%可控。工艺气体经0.22μm除菌过滤后进入舱体。[EN] Optional nitrogen protection, purity≥99.999%, O₂≤1% controllable. Process gas through 0.22μm sterilizing filter.');
+  }
+  // 领域38: UPS不间断电源（标配化）
+  if (/UPS|不间断电源|uninterruptible/i.test(lower)) {
+    notes.push('[CN] UPS不间断电源为所有5类隔离器标配（非可选配）。在线双变换式，功率≥总功率1.5倍，续航≥30min。断电自动安全停车：关闭VHP→保持排风→保存数据→锁定门。负压类优先维持排风。[EN] UPS standard for all 5 types. Online double-conversion, power≥1.5×total, backup≥30min. Auto safe shutdown: VHP off→exhaust maintain→data save→door lock. Negative types prioritize exhaust.');
+  }
+  // 领域39: 接地防雷
+  if (/接地|防雷|grounding|接地电阻|SPD/i.test(lower)) {
+    notes.push('[CN] 接地电阻≤1Ω，SPD浪涌保护器，防静电涂层（10⁶-10⁹Ω）。负压类防静电手腕带+接地监控。[EN] Grounding≤1Ω, SPD surge protector, anti-static coating (10⁶-10⁹Ω). Negative types: anti-static wrist strap+ground monitoring.');
+  }
+  // 领域40: EMC电磁兼容
+  if (/EMC|电磁兼容|electromagnetic/i.test(lower)) {
+    notes.push('[CN] 满足EN 61000-6-2/6-4，EMC Class A（工业级）。[EN] Compliant with EN 61000-6-2/6-4, EMC Class A (industrial).');
+  }
+  // 领域41: 清洁验证
+  if (/清洁验证|cleaning validation/i.test(lower)) {
+    notes.push('[CN] 提供清洁验证方案（ISPE指南），擦拭法+淋洗法，高活性物残留限值基于ADE/PDE法。[EN] Cleaning validation protocol (ISPE guide), swab+rinse sampling, potent compound residue limits per ADE/PDE.');
+  }
+  // 领域42: 消毒验证
+  if (/消毒验证|disinfection validation|消毒效力/i.test(lower)) {
+    notes.push('[CN] 消毒效力验证（USP <1072>/EN 13697），316L表面消毒兼容性（5种标准菌种+孢子）。[EN] Disinfection efficacy (USP <1072>/EN 13697), 316L surface compatibility (5 standard organisms+spores).');
+  }
+  // 领域43: 培养基模拟灌装
+  if (/培养基模拟灌装|media fill/i.test(lower)) {
+    notes.push('[CN] 提供培养基模拟灌装验证方案（中国GMP附录1第四十七条/EU GMP Annex 1 §8.123），首次连续3次合格。[EN] Media fill validation protocol (China GMP Annex 1 Art.47/EU GMP Annex 1 §8.123), 3 consecutive passes.');
+  }
+  // 领域44: 灭菌验证(BI/CI)（V2.1——SAT阶段+可选收费）
+  if (/灭菌验证|BI验证|生物指示剂验证|sterilization validation|灭菌效力|灭菌效果|半周期|全周期|杀孢子|灭活/i.test(lower)) {
+    if (equipType === 'negative') {
+      notes.push('[CN] 灭菌验证不适用于非无菌负压隔离器——纯防护用途，不要求内部无菌，无VHP灭菌系统。[EN] Sterilization validation not applicable for non-sterile negative pressure isolator — containment-only, no sterile requirement, no VHP system.');
+    } else {
+      notes.push('[CN] VHP灭菌验证按ISO 14937执行，SAT阶段。BI（嗜热脂肪地芽孢杆菌≥10⁶ CFU）+CI（Class 4），灭活≥6log，半周期+全周期验证。★V2.1：灭菌验证费为可选收费项，仅当URS提及灭菌验证时才加入报价。[EN] VHP sterilization validation per ISO 14937, SAT stage. BI (Geobacillus stearothermophilus≥10⁶ CFU)+CI (Class 4), ≥6log reduction, half+full cycle. ★V2.1: Optional fee, included only when URS mentions sterilization validation.');
+    }
+  }
+  // 领域45: 过滤器验证（过滤器配置）
+  if (/过滤器验证|filter validation|HEPA验证/i.test(lower)) {
+    notes.push('[CN] 过滤器配置标准：新风桶式过滤器+排风PUSH-PUSH过滤器（袋进袋出式），均按EN 1822验证。MPPS效率≥99.995%（H14），安装后PAO/DOP扫描检漏穿透率≤0.01%，年度完整性测试。[EN] Filter config: supply cartridge+exhaust PUSH-PUSH (bag-in bag-out), both per EN 1822. MPPS≥99.995% (H14), post-install PAO/DOP scan penetration≤0.01%, annual integrity test.');
+  }
+  // 领域46: SIP在线灭菌
+  if (/SIP|在线灭菌|sterilize.in.place/i.test(lower)) {
+    notes.push('[CN] 可选配SIP系统，纯蒸汽121℃×15min（F0≥8min），冷凝水自动排放。[EN] Optional SIP system, pure steam 121°C×15min (F0≥8min), automatic condensate drain.');
+  }
+  // 领域47: CSV计算机系统验证（V2.1两项收费引用）
+  if (/CSV|计算机系统验证|GAMP|computer system validation|CSA/i.test(lower)) {
+    notes.push('[CN] 控制系统验证按GAMP 5（第二版）风险分级。验证生命周期：URS→FS→DS→配置→IQC→OQC→PQC。★V2.1：CSV验证文件编制+现场验证操作执行合并为"验证文件及服务费"一项收费。同时支持CSA方法（FDA 2022指南）。[EN] Control system validation per GAMP 5 (2nd Ed). Lifecycle: URS→FS→DS→config→IQC→OQC→PQC. ★V2.1: CSV file preparation+on-site execution combined into "Validation Documentation & Service Fee". CSA method supported (FDA 2022).');
+  }
+  // 领域48: 远程IoT支持
+  if (/远程支持|remote support|VPN|远程诊断|IoT|物联网/i.test(lower)) {
+    notes.push('[CN] 可选配VPN远程诊断系统，接入需授权+审计追踪。远程监控设备状态/预测性维护/故障排查。[EN] Optional VPN remote diagnostics, access requires authorization+audit trail. Remote monitoring/predictive maintenance/troubleshooting.');
   }
 
   if (notes.length === 0) {
@@ -1620,53 +2090,175 @@ function generateTechNote(text, equipType) {
 function findRegulationRef(text, regulations) {
   const lower = text.toLowerCase();
   const refs = [];
+  const isNegType = (state.parsedEquipTypes[0] === 'sterile_negative' || state.parsedEquipTypes[0] === 'negative');
 
+  // 维度1: 无菌/正压/洁净
   if (/无菌|正压|洁净|iso\s*5/.test(lower)) {
     if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 无菌药品 第三条、第十七条');
     if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.8, §4.19, §4.20');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.3, §6.5');
     if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.3, §6.5');
+    if (regulations.includes('fda')) refs.push('FDA 21 CFR §211.42(c)(10)');
   }
-  if (/vhp|灭菌/.test(lower)) {
-    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第五十八条');
-    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.34, §4.35');
+  // 维度2: VHP灭菌
+  if (/vhp|汽化双氧水|汽化过氧化氢|灭菌循环/i.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第五十八条、第六十一条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.34, §4.35, §8.123');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §9.4');
     if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §9.4');
+    if (regulations.includes('fda')) refs.push('FDA 21 CFR §211.113(b)');
   }
-  if (/手套/.test(lower)) {
+  // 维度3: 手套
+  if (/手套|glove/i.test(lower)) {
     if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.14, §4.15, §8.20');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §8.12');
     if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §8.12');
+    if (regulations.includes('fda')) refs.push('FDA Aseptic Processing Guide §IV.A');
   }
-  if (/验证|iq|oq|pq|fat|sat/.test(lower)) {
+  // 维度4: 验证DQ/IQ/OQ/PQ
+  if (/dq|iq|oq|pq|fat|sat|验证|validation|qualification/i.test(lower)) {
     if (regulations.includes('cn_gmp')) refs.push('中国GMP 确认与验证附录');
     if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 15');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 1025 Annex 3 Guidelines on Qualification');
     if (regulations.includes('pics')) refs.push('PIC/S PI 012-3 Validation Master Plan');
+    if (regulations.includes('fda')) refs.push('FDA Process Validation Guidance (2011)');
   }
-  if (/21\s*cfr\s*part\s*11|电子记录|审计/.test(lower)) {
-    if (regulations.includes('fda')) refs.push('21 CFR Part 11 §11.10, §11.30');
+  // 维度5: 21 CFR Part 11/电子记录/审计
+  if (/21\s*cfr\s*part\s*11|电子记录|电子签名|审计追踪|audit trail/i.test(lower)) {
+    if (regulations.includes('fda')) refs.push('21 CFR Part 11 §11.10, §11.30, §11.50');
     if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 11');
     if (regulations.includes('cn_gmp')) refs.push('中国GMP 计算机化系统附录');
     if (regulations.includes('pics')) refs.push('PIC/S PI 041-1 Data Management and Integrity');
   }
-  if (/负压|oel|密闭|防护/.test(lower)) {
-    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第四条');
-    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.6');
-    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §4.2');
-    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §4.2');
+  // 维度6: 负压/OEL（仅负压类）
+  if (/负压|oel|oeb|密闭|防护|containment/i.test(lower)) {
+    if (isNegType) {
+      if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第四条');
+      if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.6');
+      if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §4.2');
+      if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §4.2');
+      if (regulations.includes('fda')) refs.push('ISPE Risk-MaPP Guide');
+    }
   }
-  if (/材质|不锈钢|ra|表面/.test(lower)) {
+  // 维度7: 材质/不锈钢/Ra/表面
+  if (/材质|不锈钢|stainless|ra|表面|surface/i.test(lower)) {
     if (regulations.includes('cn_gmp')) refs.push('中国GMP 第五章 第四十九条');
     if (regulations.includes('eu_gmp')) refs.push('EU GMP Part I Chapter 3 §3.38');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §12.2');
     if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Chapter 3 §3.38');
+    if (regulations.includes('fda')) refs.push('FDA 21 CFR §211.65');
   }
-  if (/报警|安全|联锁/.test(lower)) {
+  // 维度8: 报警/安全/联锁
+  if (/报警|安全|联锁|alarm|interlock/i.test(lower)) {
     if (regulations.includes('cn_gmp')) refs.push('中国GMP 第五章 第五十一条');
-    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.8');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.8, §8.3');
     if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.7');
     if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.7');
+    if (regulations.includes('fda')) refs.push('FDA 21 CFR §211.68');
+  }
+  // 维度9: 温湿度
+  if (/温度|temp|湿度|humidity/i.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第十条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.11');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.4');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.4');
+  }
+  // 维度10: 风速/风量
+  if (/风速|风量|airflow|单向流/i.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第九条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.10, §4.12');
+    if (regulations.includes('who_gmp')) refs.push('WHO TRS 961 Annex 6 §6.3');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Annex 1 §6.3');
+  }
+  // 维度11: 噪声
+  if (/噪声|noise|dB/i.test(lower)) {
+    refs.push('GB/T 50087-2013 工业企业噪声控制设计规范');
+    refs.push('ISO 11201:2010 噪声发射声压级');
+  }
+  // 维度12: 照度
+  if (/照度|lux|照明/i.test(lower)) {
+    refs.push('GB 50034-2013 建筑照明设计标准');
+    refs.push('EN 12464-1 室内工作场所照明');
+  }
+  // 维度13: 振动
+  if (/振动|vibration/i.test(lower)) {
+    refs.push('ISO 10816 机械振动评估标准');
+  }
+  // 维度14: BIBO
+  if (/bibo|袋进袋出|bag-in|bag-out/i.test(lower)) {
+    refs.push('ASHRAE 52.2 BIBO安全更换标准');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.13');
+  }
+  // 维度15: 气密性/泄漏
+  if (/气密性|泄漏率|leak/i.test(lower)) {
+    refs.push('EN ISO 14644-7 分离设备气密性');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.10');
+  }
+  // 维度16: 粒子/环境监测
+  if (/粒子|particle|粒子计数|环境监测/i.test(lower)) {
+    refs.push('ISO 14644-1 洁净室粒子浓度分类');
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第九条、第十条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §9');
+  }
+  // 维度17: 过滤器
+  if (/过滤器|HEPA|filter|桶式|push.push/i.test(lower)) {
+    refs.push('EN 1822 高效过滤器标准');
+    refs.push('ISO 29463 高效过滤器');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.10, §4.12');
+  }
+  // 维度18: 数据完整性
+  if (/数据完整性|ALCOA|data integrity/i.test(lower)) {
+    if (regulations.includes('fda')) refs.push('FDA Data Integrity Guidance (2018)');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 11 §9');
+    if (regulations.includes('pics')) refs.push('PIC/S PI 041-1');
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 计算机化系统附录');
+  }
+  // 维度19: CSV/GAMP
+  if (/CSV|GAMP|计算机系统验证/i.test(lower)) {
+    refs.push('ISPE GAMP 5 (2nd Edition)');
+    if (regulations.includes('fda')) refs.push('FDA CSA Guidance (2022)');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 11');
+  }
+  // 维度20: UPS/电力保障
+  if (/UPS|不间断电源|uninterruptible/i.test(lower)) {
+    refs.push('IEC 62040 UPS标准');
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第三十八条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.5');
+  }
+  // 维度21: 接地防雷
+  if (/接地|防雷|grounding|SPD/i.test(lower)) {
+    refs.push('GB 50057 建筑物防雷设计规范');
+    refs.push('IEC 62305 雷电防护');
+  }
+  // 维度22: EMC
+  if (/EMC|电磁兼容/i.test(lower)) {
+    refs.push('EN 61000-6-2/6-4 电磁兼容标准');
+  }
+  // 维度23: RTP/物料传递
+  if (/rtp|快速转移|rapid transfer|α.*β/i.test(lower)) {
+    refs.push('ISO 14644-7 分离设备传递端口');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §4.19, §8.122');
+  }
+  // 维度24: 灭菌验证(BI/CI)（V2.1标注可选收费触发）
+  if (/灭菌验证|BI验证|生物指示剂验证|sterilization validation|半周期|全周期|杀孢子|灭菌效力|灭活/i.test(lower)) {
+    refs.push('ISO 14937 医疗器械灭菌通用要求');
+    refs.push('ISO 11138 生物指示剂');
+    refs.push('ISO 11140 化学指示剂');
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第六十一条、第六十三条、第六十七条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §8.123');
+    if (regulations.includes('fda')) refs.push('FDA 21 CFR §211.113');
+  }
+  // 维度25: 培养基模拟灌装
+  if (/培养基模拟灌装|media fill/i.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 附录1 第四十七条');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Annex 1 §8.123');
+    if (regulations.includes('fda')) refs.push('FDA Aseptic Processing Guide §VIII');
+  }
+  // 维度26: 交付/培训
+  if (/交付|delivery|周期|培训|training|质保|warranty/i.test(lower)) {
+    if (regulations.includes('cn_gmp')) refs.push('中国GMP 第九章 生产管理');
+    if (regulations.includes('eu_gmp')) refs.push('EU GMP Part I Chapter 7');
+    if (regulations.includes('pics')) refs.push('PIC/S PE 009-16 Chapter 7');
   }
 
   return refs.length > 0 ? refs.join('；') : '-';
@@ -1674,6 +2266,7 @@ function findRegulationRef(text, regulations) {
 
 function getSupplementaryItems(equipTypes, existingReplies, regulations) {
   const supplementDB = {
+    // ==================== sterile (34条) ====================
     sterile: [
       { text: '隔离器舱体气密性要求：在+500Pa保压条件下，压降不超过+50Pa/30min', category: '性能参数' },
       { text: '手套完整性检测：应按EU GMP Annex 1要求定期检测手套完整性，检测方法应为经验证的物理方法', category: '验证确认' },
@@ -1684,8 +2277,111 @@ function getSupplementaryItems(equipTypes, existingReplies, regulations) {
       { text: '所有工艺接触面应无卫生死角，圆角过渡R≥3mm', category: '材质结构' },
       { text: '设备应具备电子批记录(EBR)数据接口', category: '控制系统' },
       { text: '设备应提供完整的备件清单和推荐备件清单', category: '文件资料' },
-      { text: '供应商应提供安装、操作和维护手册(SOP)', category: '文件资料' }
+      { text: '供应商应提供安装、操作和维护手册(SOP)', category: '文件资料' },
+      { text: '温湿度精密控制：隔离器内部温度控制精度±2℃（标准），可选配精密温控模块实现±1℃。相对湿度控制精度±5%RH', category: '性能参数' },
+      { text: '噪声控制承诺：整机运行噪声≤65dB(A)（距设备1m），操作位≤60dB(A)，满足ISO 11201', category: '性能参数' },
+      { text: '照度保证：内部工作面照度≥500Lux，IP65 LED洁净灯，色温5000-6000K，Ra≥85', category: '性能参数' },
+      { text: '气密性保证：舱体气密性泄漏率≤1.0Pa/min（EN ISO 14644-7，50Pa测试），焊缝氦质谱检漏', category: '性能参数' },
+      { text: '振动控制：整机振动≤0.5mm/s（ISO 10816），三重减振方案', category: '性能参数' },
+      { text: '风速风量：工作区单向流风速0.36-0.54m/s（中国GMP附录1第九条），EC变频风机', category: '性能参数' },
+      { text: '过滤器配置标准：新风（送风）采用桶式过滤器（cartridge filter，H14级，≥99.995%）；排风采用PUSH-PUSH过滤器（袋进袋出式，bag-in bag-out，H14级）', category: '灭菌系统' },
+      { text: '数据完整性：控制系统符合ALCOA+原则，数据本地SSD+网络双备份，保留≥5年', category: '控制系统' },
+      { text: '审计追踪：自动记录所有关键操作，不可修改删除，支持导出', category: '控制系统' },
+      { text: '三级权限：操作员/工艺员/管理员三级权限，密码安全策略', category: '控制系统' },
+      { text: 'UPS备电（标配）：UPS不间断电源为标配配置（非可选配）。在线双变换UPS，续航≥30min，断电自动执行安全停车程序', category: '公用工程' },
+      { text: '接地防雷：接地电阻≤1Ω，SPD浪涌保护器，防静电涂层', category: '公用工程' },
+      { text: 'EMC电磁兼容：满足EN 61000-6-2/6-4，EMC Class A（工业级）', category: '公用工程' },
+      { text: '远程支持：可选配VPN远程诊断系统，接入需授权+审计追踪', category: '控制系统' },
+      { text: 'OPC UA通信：PLC支持OPC UA Server，X.509+TLS 1.2加密', category: '控制系统' },
+      { text: 'MES对接：提供RESTful API/WebService接口，支持EBR传输，需定制', category: '控制系统' },
+      { text: 'CIP在线清洗：可选配CIP系统，固定喷球+多步清洗程序', category: '灭菌系统' },
+      { text: 'SIP在线灭菌：可选配SIP系统，纯蒸汽121℃×15min（F0≥8min）', category: '灭菌系统' },
+      { text: '除菌过滤：送排风0.22μm除菌过滤（H14级），安装后PAO检漏', category: '灭菌系统' },
+      { text: '氮气保护：可选配氮气保护系统，纯度≥99.999%，氧含量≤1%', category: '公用工程' },
+      { text: 'RTP快速转移（按需配置）：RTP按需配置（非标配）。触发条件：①需无菌传进传出物料时→sterile类标配RTP接口；②OEB5级时不适用（sterile类非负压，不涉及OEB）。α-β阀对接设计（ISO 14644-7），密封圈寿命≥500次', category: '物料传递' },
+      { text: '过滤器完整性测试：预留PAO/DOP测试端口，桶式+PUSH-PUSH过滤器均支持扫描法检漏', category: '验证确认' },
+      { text: '清洁验证支持：提供清洁SOP模板，擦拭法+淋洗法，ADE/PDE残留限值', category: '验证确认' },
+      { text: '验证服务（收费结构）：★V2.1：验证文件及服务费（必含）——验证文件编制（DQ/IQ/OQ/PQ方案与报告+VMP+SOP+CSV验证文件）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性测试+泄漏测试），合并为一项收费。灭菌验证费（可选）——仅当URS提及灭菌验证时才加入报价，SAT阶段BI/CI+半周期/全周期执行。详见类别8', category: '验证确认' }
     ],
+    // ==================== sterile_negative (38条) ====================
+    sterile_negative: [
+      { text: '无菌+负压双重保障：隔离器采用"内部正压维持无菌+整体负压防护高毒"双重设计。内部工作区正压+10~+30Pa维持ISO 5洁净度，舱体外部整体负压-30~-10Pa防止高毒物料外溢。★V2.1使用场景：带活性或毒性的药品需要在无菌环境下进行操作，包括但不限于灌装、分装、称量等', category: '性能参数' },
+      { text: '内部正压维持ISO5：内部工作区维持正压+10~+30Pa（中国GMP附录1第十四条），ISO 5级洁净度（中国GMP附录1第九条A级区），≥0.5μm粒子≤3520个/m³', category: '性能参数' },
+      { text: 'VHP灭菌系统：配置VHP汽化双氧水灭菌系统，浓度200-1500ppm可调，灭活效率≥6log（ISO 14937），灭菌后H2O2残留≤1ppm。满足无菌要求', category: '灭菌系统' },
+      { text: '负压防护高毒物料：舱体整体负压-30~-10Pa可控，排风风机变频冗余（1用1备），负压波动≤±5Pa，排风故障自动切换。防止高毒物料外溢', category: '性能参数' },
+      { text: 'OEL控制保证：OEL控制仅适用于负压类。隔离器舱体密封+负压-30~-10Pa+双HEPA排风+BIBO，操作位OEL可控至0.01μg/m³（OEB5/6级）。根据物料MSDS确定OEB分级，出具OEL控制评估报告', category: '性能参数' },
+      { text: 'BIBO袋进袋出（标配）：BIBO安全更换系统仅sterile_negative标配。排风PUSH-PUSH过滤器（袋进袋出式）配合BIBO安全更换系统（ASHRAE 52.2），PVC保护袋+热封夹，更换无暴露风险。因处理带活性或毒性药品，排风过滤器可能沾染高毒物，需BIBO安全更换', category: '安全联锁' },
+      { text: '过滤器配置标准：新风（送风）采用桶式过滤器（cartridge filter，H14级，≥99.995%）；排风采用PUSH-PUSH过滤器（袋进袋出式，bag-in bag-out，H14级）+BIBO安全更换系统', category: '灭菌系统' },
+      { text: '负压稳定性：负压-30~-10Pa可控，排风风机变频冗余（1用1备），负压波动≤±5Pa', category: '性能参数' },
+      { text: '气密性保证：舱体泄漏率≤0.5Pa/min（负压+无菌双重高要求），氦质谱检漏+压力衰减法双重验证', category: '性能参数' },
+      { text: '气流组织：负压气流由清洁侧→污染侧→排风PUSH-PUSH过滤器，无涡流回流，CFD模拟验证。内部正压区垂直单向流0.36-0.54m/s', category: '性能参数' },
+      { text: '温湿度控制：舱内温度18-26℃（±2℃），湿度40-60%RH（±5%），可选配精密温控（±1℃）', category: '性能参数' },
+      { text: '噪声控制：整机噪声≤65dB(A)，排风风机低噪音EC电机+消声器，操作位≤60dB(A)', category: '性能参数' },
+      { text: '照度：内部照度≥500Lux，IP65 LED洁净灯，色温5000-6000K', category: '性能参数' },
+      { text: '振动控制：整机振动≤0.5mm/s（ISO 10816），三重减振方案', category: '性能参数' },
+      { text: '风速风量：内部正压区单向流0.36-0.54m/s，EC变频风机，风速波动≤±10%', category: '性能参数' },
+      { text: '数据完整性：控制系统符合ALCOA+，负压/排风/OEL/VHP/正压监测数据自动记录，保留≥5年', category: '控制系统' },
+      { text: '审计追踪：全部操作审计追踪（含负压/正压参数修改/BIBO更换/VHP灭菌记录），不可修改删除', category: '控制系统' },
+      { text: '电子签名：批生产记录电子签名审批，符合21 CFR Part 11.50/11.100/11.200', category: '控制系统' },
+      { text: '三级权限：操作员/工艺员/管理员三级权限，密码安全策略符合21 CFR Part 11.300', category: '控制系统' },
+      { text: 'UPS备电（标配）：UPS为标配配置。在线双变换UPS，续航≥30min。断电时优先维持排风风机运行+负压保持+VHP安全关闭+数据保存，防止有害物外溢', category: '公用工程' },
+      { text: '接地防雷：接地电阻≤1Ω，箱体防静电涂层（10⁶-10⁹Ω），防静电手腕带+接地监控', category: '公用工程' },
+      { text: 'EMC电磁兼容：满足EN 61000-6-2/6-4，EMC Class A（工业级）', category: '公用工程' },
+      { text: '紧急排风系统：配置紧急排风系统（排风量≥正常2倍），压差超限/停电时自动启动，经PUSH-PUSH+BIBO过滤器排放', category: '安全联锁' },
+      { text: 'OPC UA通信：PLC支持OPC UA，负压/排风/OEL/VHP数据上传SCADA/MES，X.509+TLS 1.2', category: '控制系统' },
+      { text: '远程支持：可选配VPN远程诊断，远程监控负压/排风/BIBO/VHP状态/预测性维护', category: '控制系统' },
+      { text: 'RTP快速转移（按需配置）：RTP按需配置。触发条件：①需无菌传进传出物料时→sterile_negative标配RTP接口；②OEB5级（OEL<1μg/m³）时→建议配置RTP实现密闭转移。α-β阀对接（ISO 14644-7）', category: '物料传递' },
+      { text: '除菌过滤：新风桶式过滤器+排风PUSH-PUSH过滤器（均H14级≥99.995%），工艺气体0.22μm除菌过滤', category: '灭菌系统' },
+      { text: '过滤器完整性测试：新风桶式+排风PUSH-PUSH双HEPA完整性测试（PAO扫描法），排风BIBO系统密封性验证，穿透率≤0.01%', category: '验证确认' },
+      { text: '泄漏测试：压力衰减法（-50Pa保压10min，压升≤0.5Pa/min）+示踪气体法（SF6检漏灵敏度10⁻⁹ Pa·m³/s）', category: '验证确认' },
+      { text: '清洁验证：提供清洁验证方案（ISPE指南），擦拭法+淋洗法，高活性物残留限值基于ADE/PDE法', category: '验证确认' },
+      { text: '消毒验证：消毒效力验证（USP <1072>/EN 13697），316L表面消毒兼容性（5种标准菌种+孢子）', category: '验证确认' },
+      { text: '灭菌验证(BI/CI)：★V2.1：灭菌验证为可选收费项，SAT阶段执行。BI（嗜热脂肪地芽孢杆菌≥10⁶ CFU）+CI（Class 4），灭活≥6log，半周期+全周期验证（ISO 14937）。费用仅当URS提及灭菌验证时才加入报价', category: '验证确认' },
+      { text: '过滤器验证：新风桶式+排风PUSH-PUSH过滤器HEPA H14验证（EN 1822），BIBO密封性验证，年度完整性测试', category: '验证确认' },
+      { text: 'CSV验证：控制系统验证按GAMP 5，含负压控制/正压维持/VHP灭菌/报警联锁/数据完整性关键功能验证', category: '验证确认' },
+      { text: 'OEB/OEL分级确认：提供OEB/OEL分级评估方案，根据物料MSDS确定防护等级，出具OEL控制评估报告', category: '验证确认' },
+      { text: '验证服务（收费结构）：★V2.1：验证文件及服务费（必含）——验证文件编制（DQ/IQ/OQ/PQ+VMP+SOP+CSV）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性+泄漏测试+BIBO密封性），合并为一项收费。灭菌验证费（可选）——仅当URS提及灭菌验证时才加入报价，SAT阶段BI/CI+半周期/全周期执行。详见类别8', category: '验证确认' },
+      { text: 'FAT/SAT：出厂FAT（含正压/负压测试/气密性/BIBO功能/VHP灭菌/BI验证），现场SAT（含安装/正负压确认/OEL检测/灭菌验证）', category: '交付服务' },
+      { text: '人因工程：手套口高度可调（750-950mm），视窗防眩光，操作面板7°倾斜（EN 614-1）', category: '人因工程' }
+    ],
+    // ==================== negative (34条) ====================
+    negative: [
+      { text: '非无菌负压防护：隔离器为纯防护负压设计，舱内维持负压-30~-10Pa，不要求内部无菌环境。针对高毒但不要求无菌的物料（HPAPI称量/粉碎等）。不配置VHP灭菌系统。★V2.1：与sterile_negative的本质区别——negative仅毒防护不要求无菌，sterile_negative毒+无菌双重需求', category: '性能参数' },
+      { text: 'OEL控制保证：OEL控制仅适用于负压类。舱体密封+负压-30~-10Pa+双HEPA排风，操作位OEL可控至0.01μg/m³（OEB5/6级）。根据物料MSDS确定OEB分级', category: '性能参数' },
+      { text: 'BIBO暂未配置：BIBO安全更换系统暂未配置（需定制）。排风采用PUSH-PUSH过滤器（袋进袋出式），但完整BIBO安全更换系统（PVC袋+热封夹）暂未配置，如需配置需定制评估。响应判断：部分满足', category: '安全联锁' },
+      { text: '过滤器配置标准：新风（送风）采用桶式过滤器（cartridge filter，H14级，≥99.995%）；排风采用PUSH-PUSH过滤器（袋进袋出式，bag-in bag-out，H14级）。BIBO安全更换系统暂未配置', category: '灭菌系统' },
+      { text: '负压稳定性：负压-30~-10Pa可控，排风风机变频冗余（1用1备），负压波动≤±5Pa，排风故障自动切换', category: '性能参数' },
+      { text: '气密性保证：舱体泄漏率≤0.5Pa/min（负压隔离器高要求），氦质谱检漏+压力衰减法双重验证', category: '性能参数' },
+      { text: '气流组织：负压气流由清洁侧→污染侧→排风PUSH-PUSH过滤器，无涡流回流，CFD模拟验证', category: '性能参数' },
+      { text: '温湿度控制：舱内温度18-26℃（±2℃），湿度40-60%RH（±5%），可选配精密温控（±1℃）', category: '性能参数' },
+      { text: '噪声控制：整机噪声≤65dB(A)，排风风机低噪音EC电机+消声器，操作位≤60dB(A)', category: '性能参数' },
+      { text: '照度：内部照度≥500Lux，IP65 LED洁净灯', category: '性能参数' },
+      { text: '振动控制：整机振动≤0.5mm/s（ISO 10816），三重减振方案', category: '性能参数' },
+      { text: '粉体防护设计：针对粉体/粉末操作优化，内部无死角设计（R角≥10mm），负压气流组织防止粉体外溢', category: '性能参数' },
+      { text: '称量精度保证：称量工位独立减振，振动≤0.1mm/s，可选配在线称重模块（精度±0.1%）', category: '性能参数' },
+      { text: '表面处理：舱体内表面Ra≤0.4μm，电解抛光处理，无死角设计', category: '材质结构' },
+      { text: '消毒剂兼容性：316L表面与异丙醇/乙醇/过氧化氢/次氯酸钠兼容，不兼容pH<2/pH>12', category: '材质结构' },
+      { text: '数据完整性：控制系统符合ALCOA+，负压/排风/OEL监测数据自动记录，保留≥5年不可删除', category: '控制系统' },
+      { text: '审计追踪：全部操作审计追踪（含负压参数修改/过滤器更换/维护记录），不可修改删除', category: '控制系统' },
+      { text: '三级权限：操作员/工艺员/管理员三级权限，密码安全策略符合21 CFR Part 11.300', category: '控制系统' },
+      { text: 'UPS备电（标配）：UPS为标配配置。在线双变换UPS，续航≥30min。断电时优先维持排风风机运行+负压保持+数据保存，防止有害物外溢', category: '公用工程' },
+      { text: '接地防雷：接地电阻≤1Ω，箱体防静电涂层（10⁶-10⁹Ω），防静电手腕带+接地监控', category: '公用工程' },
+      { text: 'EMC电磁兼容：满足EN 61000-6-2/6-4，EMC Class A（工业级）', category: '公用工程' },
+      { text: '紧急排风系统：配置紧急排风系统（排风量≥正常2倍），压差超限/停电时自动启动，经PUSH-PUSH过滤器排放', category: '安全联锁' },
+      { text: 'OPC UA通信：PLC支持OPC UA，负压/排风/OEL数据上传SCADA/MES，X.509+TLS 1.2', category: '控制系统' },
+      { text: '远程支持：可选配VPN远程诊断，远程监控负压/排风/过滤器状态/预测性维护', category: '控制系统' },
+      { text: 'RTP快速转移（按需配置）：RTP按需配置。触发条件：①需无菌传进传出时不适用（negative非无菌）；②OEB5级（OEL<1μg/m³）时→建议配置RTP实现密闭转移。α-β阀对接（ISO 14644-7）', category: '物料传递' },
+      { text: '过滤器完整性测试：新风桶式+排风PUSH-PUSH双HEPA完整性测试（PAO扫描法），穿透率≤0.01%', category: '验证确认' },
+      { text: '泄漏测试：压力衰减法（-50Pa保压10min，压升≤0.5Pa/min）+示踪气体法（SF6检漏灵敏度10⁻⁹ Pa·m³/s）', category: '验证确认' },
+      { text: '清洁验证：提供清洁验证方案（ISPE指南），擦拭法+淋洗法，高活性物残留限值基于ADE/PDE法', category: '验证确认' },
+      { text: '消毒验证：消毒效力验证（USP <1072>/EN 13697），316L表面消毒兼容性（5种标准菌种+孢子）', category: '验证确认' },
+      { text: '过滤器验证：新风桶式+排风PUSH-PUSH过滤器HEPA H14验证（EN 1822），年度完整性测试', category: '验证确认' },
+      { text: 'CSV验证：控制系统验证按GAMP 5，含负压控制/报警联锁/数据完整性关键功能验证', category: '验证确认' },
+      { text: 'OEB/OEL分级确认：提供OEB/OEL分级评估方案，根据物料MSDS确定防护等级，出具OEL控制评估报告', category: '验证确认' },
+      { text: '验证服务（收费结构，无灭菌验证）：★V2.1：验证文件及服务费（必含）——验证文件编制（DQ/IQ/OQ/PQ+VMP+SOP+CSV）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性+泄漏测试），合并为一项收费。无灭菌验证费（非无菌负压隔离器不需要灭菌验证——纯防护用途，不要求内部无菌，无VHP灭菌系统）。详见类别8', category: '验证确认' },
+      { text: 'FAT/SAT：出厂FAT（含负压测试/气密性测试/过滤器功能测试），现场SAT（含安装/负压确认/OEL检测）。无灭菌验证', category: '交付服务' }
+    ],
+    // ==================== vhp (34条) ====================
     vhp: [
       { text: 'VHP灭菌循环应可编程设定，至少包含：除湿→灭菌→排残→通风四个阶段', category: '灭菌系统' },
       { text: '双门互锁系统：两侧门不得同时开启，需验证互锁功能可靠性', category: '安全联锁' },
@@ -1698,8 +2394,31 @@ function getSupplementaryItems(equipTypes, existingReplies, regulations) {
       { text: '传递窗舱体气密性要求：在+500Pa保压条件下，压降不超过+50Pa/30min', category: '性能参数' },
       { text: 'VHP浓度监测：舱内应配置在线H₂O₂浓度传感器，实时监测灭菌浓度', category: '控制系统' },
       { text: '供应商应提供安装、操作和维护手册(SOP)', category: '文件资料' },
-      { text: '设备应提供完整的备件清单和推荐备件清单', category: '文件资料' }
+      { text: '设备应提供完整的备件清单和推荐备件清单', category: '文件资料' },
+      { text: 'VHP浓度控制：VHP浓度可控范围200-1500ppm，精度±5%，浓度传感器实时反馈闭环控制', category: '性能参数' },
+      { text: '灭菌时间保证：标准灭菌循环≤2h（含去污+通风），可根据BI验证结果优化', category: '性能参数' },
+      { text: '灭活效率：灭菌效率≥6log减少（嗜热脂肪地芽孢杆菌BI验证），ISO 14937', category: '性能参数' },
+      { text: 'H2O2残留保证：灭菌后H2O2残留≤1ppm（催化分解+通风置换）', category: '性能参数' },
+      { text: '气密性保证：舱体泄漏率≤1.0Pa/min（EN ISO 14644-7），双门气密密封+互锁', category: '性能参数' },
+      { text: '双门互锁安全：双门机械+电子双重互锁，紧急解锁需授权', category: '安全联锁' },
+      { text: '压差安全联锁：传递窗内外压差≥10Pa，压差低于5Pa时联锁锁定门并报警', category: '安全联锁' },
+      { text: '过滤器配置标准：新风（送风）采用桶式过滤器（cartridge filter，H14级）；排风采用PUSH-PUSH过滤器（袋进袋出式，bag-in bag-out，H14级）', category: '灭菌系统' },
+      { text: '数据完整性：控制系统符合ALCOA+，灭菌记录自动存储，保留≥5年', category: '控制系统' },
+      { text: '审计追踪：自动记录灭菌循环参数（浓度/温度/时间/操作人员），不可修改删除', category: '控制系统' },
+      { text: '三级权限：操作员/工艺员/管理员三级权限，密码安全策略', category: '控制系统' },
+      { text: 'UPS备电（标配）：UPS为标配配置。断电时UPS维持控制系统≥30min，自动保存当前灭菌记录并安全锁定', category: '公用工程' },
+      { text: 'EMC电磁兼容：满足EN 61000-6-2/6-4，EMC Class A（工业级）', category: '公用工程' },
+      { text: 'OPC UA通信：PLC支持OPC UA，支持与SCADA/MES数据交换', category: '控制系统' },
+      { text: '远程支持：可选配VPN远程诊断，远程查看灭菌状态/故障排查', category: '控制系统' },
+      { text: 'RTP（不适用）：RTP不适用于VHP传递窗（传递窗本身即为传递设备）', category: '物料传递' },
+      { text: '生物指示剂验证：提供BI验证方案（嗜热脂肪地芽孢杆菌≥10⁶ CFU），最难灭菌位置布置+7天培养', category: '验证确认' },
+      { text: '化学指示剂监控：提供CI（ISO 11140-1 Class 4）过程监控', category: '验证确认' },
+      { text: '过滤器完整性：送排风HEPA H14过滤器（桶式+PUSH-PUSH），安装后PAO检漏，穿透率≤0.01%', category: '验证确认' },
+      { text: '表面处理：舱体内表面Ra≤0.4μm，电解抛光，无死角设计（R角≥10mm）', category: '材质结构' },
+      { text: '消毒剂兼容性：316L表面与异丙醇/乙醇/过氧化氢/次氯酸钠兼容', category: '材质结构' },
+      { text: '验证服务（收费结构）：★V2.1：验证文件及服务费（必含）——验证文件编制（DQ/IQ/OQ/PQ+VMP+SOP+CSV）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性+泄漏测试），合并为一项收费。灭菌验证费（可选）——仅当URS提及灭菌验证时才加入报价，SAT阶段BI/CI+半周期/全周期执行。详见类别8', category: '验证确认' }
     ],
+    // ==================== integrated (34条) ====================
     integrated: [
       { text: '全线联动控制：灌装→轧盖→称重各工位应实现自动化联动，节拍匹配', category: '控制系统' },
       { text: '在线称重系统(W&Q)接口：支持主流称重品牌数据通信', category: '控制系统' },
@@ -1710,19 +2429,31 @@ function getSupplementaryItems(equipTypes, existingReplies, regulations) {
       { text: '电子批记录(EBR)接口：支持MES系统集成', category: '控制系统' },
       { text: '全线设备应统一PLC/SCADA平台管理', category: '控制系统' },
       { text: '全线验证应包含各工位联动运行确认(PQ)', category: '验证确认' },
-      { text: '应提供整线设备平面布局图和3D模型', category: '文件资料' }
-    ],
-    negative: [
-      { text: '负压舱体气密性：在-500Pa保压条件下，压升不超过+50Pa/30min', category: '性能参数' },
-      { text: 'OEL控制验证：设备外表面擦拭试验和空气监测应符合OEB 4/5级要求', category: '验证确认' },
-      { text: '双重HEPA排风过滤：每级效率≥99.995%（MPPS），支持在线扫描检漏', category: '性能参数' },
-      { text: 'BIBO安全更换过滤器：排风HEPA应配置袋进袋出(BIBO)更换装置', category: '材质结构' },
-      { text: '气闸/缓冲设计：进出料气闸应具备压差梯度，防止有毒物质外泄', category: '性能参数' },
-      { text: 'WIP在线清洗系统：舱体内壁及关键部位应可在线清洗(WIP)', category: '性能参数' },
-      { text: '毒性残留监测：排风口应配置在线H₂O₂/毒性物质残留监测仪', category: '环境监测' },
-      { text: '操作员防护：手套/半身服接口，确保操作人员零暴露', category: '安全联锁' },
-      { text: '紧急排风系统：应配置备用排风机，主排风机故障时自动切换', category: '安全联锁' },
-      { text: '应提供OEL/OEB评估报告和密闭性能验证方案', category: '文件资料' }
+      { text: '应提供整线设备平面布局图和3D模型', category: '文件资料' },
+      { text: '联动时序控制：灌装→加塞→轧盖工序间联动时序可调（0-5s缓冲），PLC高速总线通信（≤10ms响应）', category: '控制系统' },
+      { text: '在线称重集成：可选配在线称重模块（Mettler Toledo/赛多利斯），精度±0.1%，数据自动传输EBR', category: '控制系统' },
+      { text: '温湿度精密控制：各工位温度独立控制（±1℃可选），湿度±3%RH可选', category: '性能参数' },
+      { text: '气流组织优化：CFD气流模拟优化各工位气流，关键灌装区单向流0.36-0.54m/s', category: '性能参数' },
+      { text: '气密性保证：各工位舱体泄漏率≤1.0Pa/min，工位间传递通道气密密封', category: '性能参数' },
+      { text: '压差梯度：各工位间压差梯度≥10Pa递进，PLC自动维持，压差超限联锁报警', category: '性能参数' },
+      { text: '过滤器配置标准：新风（送风）采用桶式过滤器（cartridge filter，H14级）；排风采用PUSH-PUSH过滤器（袋进袋出式，bag-in bag-out，H14级）。各工位独立配置', category: '灭菌系统' },
+      { text: '培养基模拟灌装：提供培养基模拟灌装验证方案（中国GMP附录1第四十七条/EU GMP Annex 1 §8.123），首次连续3次合格', category: '验证确认' },
+      { text: '数据完整性：整线控制系统符合ALCOA+，批次数据完整可追溯，EBR自动生成', category: '控制系统' },
+      { text: '审计追踪：全线操作审计追踪，含各工位操作记录/设备状态变更/偏差记录', category: '控制系统' },
+      { text: '电子签名：批生产记录电子签名审批（执行/复核/放行），符合21 CFR Part 11', category: '控制系统' },
+      { text: '三级权限：操作员/工艺员/管理员/QA四级权限，QA放行权限独立', category: '控制系统' },
+      { text: 'SCADA系统：可选配SCADA集中监控，支持最多32台设备', category: '控制系统' },
+      { text: 'MES/EBR对接：RESTful API/WebService/OPC UA接口，支持Werum/Siemens/SAP MII对接', category: '控制系统' },
+      { text: 'CIP/SIP：可选配CIP/SIP系统，各工位独立清洗/灭菌管路，纯蒸汽SIP（121℃×15min）', category: '灭菌系统' },
+      { text: '除菌过滤：工艺气体0.22μm除菌过滤，新风桶式+排风PUSH-PUSH H14送排风', category: '灭菌系统' },
+      { text: '氮气保护：可选配氮气保护系统，灌装区氧含量≤1%可控', category: '公用工程' },
+      { text: 'UPS备电（标配）：UPS为标配配置。整线UPS续航≥30min，断电安全停车程序（各工位有序停机+数据保存+门锁定）', category: '公用工程' },
+      { text: '接地防雷：整线接地电阻≤1Ω，各工位等电位连接，SPD浪涌保护+信号防雷', category: '公用工程' },
+      { text: 'RTP快速转移（按需配置）：RTP按需配置。触发条件：①需无菌传进传出物料时→integrated标配RTP接口；②OEB5级时不适用（integrated非负压）。α-β阀对接（ISO 14644-7）', category: '物料传递' },
+      { text: '清洁验证支持：提供整线清洁验证方案（ISPE指南），多工位擦拭+淋洗取样', category: '验证确认' },
+      { text: '消毒验证：消毒效力验证（USP <1072>/EN 13697），各工位独立验证', category: '验证确认' },
+      { text: '灭菌验证(BI/CI)：VHP灭菌验证（ISO 14937），BI≥10⁶ CFU+CI Class 4，灭活≥6log，半周期+全周期。★V2.1：SAT阶段执行，可选收费项——仅当URS提及灭菌验证时才加入报价', category: '验证确认' },
+      { text: '验证服务（收费结构）：★V2.1：验证文件及服务费（必含）——验证文件编制（DQ/IQ/OQ/PQ+VMP+SOP+CSV）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性+泄漏测试+培养基模拟灌装），合并为一项收费。灭菌验证费（可选）——仅当URS提及灭菌验证时才加入报价，SAT阶段BI/CI+半周期/全周期执行。详见类别8', category: '验证确认' }
     ]
   };
 
@@ -1890,7 +2621,7 @@ function generateDocs() {
     // Render URS Reply
     renderURSReply(allReplies, customerName, projectName, supplierName, docDate, regulations, equipTypes);
     // Render Quote
-    renderQuote(equipTypes, customerName, projectName, supplierName, docDate, regulations);
+    renderQuote(equipTypes, customerName, projectName, supplierName, docDate, regulations, ursText);
 
     btn.innerHTML = '🚀 生成文档（URS回复 + 快速报价）';
     btn.disabled = false;
@@ -2001,8 +2732,48 @@ function renderURSReply(replies, customer, project, supplier, date, regulations,
   container.innerHTML = html;
 }
 
+// ---- Sterilization Validation Fee Check (V2.1 §8.7) ----
+function shouldIncludeSterilizationValidationFee(deviceType, ursText) {
+  // Layer A: Check if device type supports sterilization validation
+  var sterilizationCapableTypes = ['sterile', 'sterile_negative', 'integrated', 'vhp'];
+  var isCapable = sterilizationCapableTypes.indexOf(deviceType) >= 0;
+
+  // Layer B: Check if URS mentions sterilization validation (18 trigger keywords)
+  var triggerKeywords = [
+    /灭菌验证/i,
+    /BI验证|生物指示剂验证/i,
+    /生物指示剂/i,
+    /化学指示剂/i,
+    /灭菌效力|灭菌效果/i,
+    /半周期验证/i,
+    /全周期验证/i,
+    /杀孢子验证|杀孢子剂验证/i,
+    /VHP灭菌验证/i,
+    /灭菌周期验证/i,
+    /灭活验证|灭活效率/i,
+    /SAL验证|无菌保证水平验证/i,
+    /sterilization\s*validation/i,
+    /BI\s*validation|biological\s*indicator\s*validation/i,
+    /half[\s-]*cycle\s*validation/i,
+    /full[\s-]*cycle\s*validation/i,
+    /sporicidal\s*validation/i,
+    /decontamination\s*validation/i
+  ];
+  var isMentioned = triggerKeywords.some(function(regex) { return regex.test(ursText); });
+
+  if (isMentioned && isCapable) {
+    return { include: true, reason: 'URS提及灭菌验证且设备类型支持', warning: '' };
+  } else if (isMentioned && !isCapable) {
+    return { include: false, reason: 'URS提及灭菌验证但设备类型(negative)不支持灭菌验证', warning: '灭菌验证不适用于非无菌负压隔离器，该设备无VHP灭菌系统' };
+  } else if (!isMentioned && isCapable) {
+    return { include: false, reason: 'URS未提及灭菌验证需求', warning: 'URS未提及灭菌验证需求，灭菌验证费未计入；如需灭菌验证请补充URS需求' };
+  } else {
+    return { include: false, reason: 'URS未提及且设备类型不支持', warning: '' };
+  }
+}
+
 // ---- Render Quote ----
-function renderQuote(equipTypes, customer, project, supplier, date, regulations) {
+function renderQuote(equipTypes, customer, project, supplier, date, regulations, ursText) {
   const container = document.getElementById('quoteContent');
   const quoteNo = generateQuoteNo();
   const expiryDate = formatDate(new Date(Date.now() + 30 * 24 * 3600 * 1000));
@@ -2010,17 +2781,25 @@ function renderQuote(equipTypes, customer, project, supplier, date, regulations)
   const equipInfo = EQUIP_TYPES[primaryType];
   const regNames = regulations.map(r => REGULATION_REFS[r]?.name || r).join(' / ');
 
-  // Price calculation (USD, single standard configuration)
+  // Price calculation (USD, V2.1 two-fee validation structure)
   const priceRange = PRICE_RANGES[primaryType];
   const basePrice = roundToTenThousand(randomInRange(priceRange[0], priceRange[1]));
   const vhpPrice = primaryType === 'vhp' ? 0 : roundToTenThousand(basePrice * 0.15);
   const installPrice = roundToTenThousand(basePrice * 0.06);
-  const validationPrice = roundToTenThousand(basePrice * 0.07);
+  const validationDocServicePrice = roundToTenThousand(basePrice * 0.07);
   const trainingPrice = roundToTenThousand(basePrice * 0.02);
   const sparePartsPrice = roundToTenThousand(basePrice * 0.03);
   const docPackagePrice = roundToTenThousand(basePrice * 0.02);
   const shippingPrice = roundToTenThousand(basePrice * 0.03);
-  const totalPrice = basePrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationPrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+
+  // V2.1 §8.7: Sterilization validation fee (optional, URS-triggered)
+  const sterValidationCheck = shouldIncludeSterilizationValidationFee(primaryType, ursText || '');
+  const sterilizationValidationPrice = sterValidationCheck.include ? roundToTenThousand(basePrice * 0.03) : 0;
+
+  let totalPrice = basePrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationDocServicePrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+  if (sterValidationCheck.include) {
+    totalPrice += sterilizationValidationPrice;
+  }
 
   const stdConfig = getStandardConfig(primaryType);
 
@@ -2061,9 +2840,10 @@ function renderQuote(equipTypes, customer, project, supplier, date, regulations)
 
   html += `</tbody></table></div>
 
-    <h3>验证支持说明 / Validation Support</h3>
-    <p>[CN] 本报价包含DQ/IQ/OQ/PQ全套验证文件包，验证方案依据ISPE GAMP 5指南、中国GMP确认与验证附录及EU GMP Annex 15编制。FAT在供应商工厂执行，SAT在用户现场执行。如需额外验证服务（如工艺验证、培养基模拟灌装验证支持），可另行协商。</p>
-    <p>[EN] This quotation includes a complete DQ/IQ/OQ/PQ validation documentation package. Validation protocols are prepared in accordance with ISPE GAMP 5, China GMP Qualification & Validation Annex, and EU GMP Annex 15. FAT is executed at the supplier facility; SAT at the user site. Additional validation services (e.g., process validation, media fill validation support) can be negotiated separately.</p>
+    <h3>验证支持说明 / Validation Support (V2.1 Two-Fee Structure)</h3>
+    <p>[CN] ★V2.1两项收费结构：①验证文件及服务费（必含）——包含验证文件编制（DQ/IQ/OQ/PQ方案与报告+VMP+SOP+CSV验证文件）+现场验证操作执行（IQ/OQ/PQ现场执行+过滤器完整性测试+泄漏测试），验证方案依据ISPE GAMP 5指南、中国GMP确认与验证附录及EU GMP Annex 15编制。FAT在供应商工厂执行，SAT在用户现场执行。②灭菌验证费（可选）——仅当URS提及灭菌验证需求时才加入报价，在SAT阶段执行BI/CI+半周期/全周期验证（ISO 14937）。</p>
+    <p>[EN] ★V2.1 Two-Fee Structure: ① Validation Documentation & Service Fee (mandatory) — includes documentation preparation (DQ/IQ/OQ/PQ protocols & reports + VMP + SOP + CSV) and on-site execution (IQ/OQ/PQ execution + filter integrity + leak testing). Protocols per ISPE GAMP 5, China GMP, EU GMP Annex 15. FAT at supplier facility; SAT at user site. ② Sterilization Validation Fee (optional) — added only when URS mentions sterilization validation; executed at SAT stage with BI/CI + half/full cycle (ISO 14937).</p>
+    ${sterValidationCheck.warning ? '<p style="font-size:0.72rem; color:#c53030; background:#fff5f5; padding:6px 10px; border-radius:4px; margin-top:6px;">⚠️ ' + sterValidationCheck.warning + '</p>' : ''}
 
     <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;" />
 
@@ -2095,11 +2875,17 @@ function renderQuote(equipTypes, customer, project, supplier, date, regulations)
 
   html += `
         <tr><td style="text-align:center;">3</td><td>安装调试 / Installation & Commissioning</td><td style="text-align:right;">${formatMoney(installPrice)}</td><td>含现场安装、调试、开机验证 / Incl. on-site installation, commissioning, startup verification</td></tr>
-        <tr><td style="text-align:center;">4</td><td>验证服务 / Validation Services (IQ/OQ/PQ)</td><td style="text-align:right;">${formatMoney(validationPrice)}</td><td>含验证方案编制及执行 / Incl. protocol preparation & execution</td></tr>
-        <tr><td style="text-align:center;">5</td><td>培训服务 / Training Services</td><td style="text-align:right;">${formatMoney(trainingPrice)}</td><td>操作+维护培训，3天 / Operation & maintenance training, 3 days</td></tr>
-        <tr><td style="text-align:center;">6</td><td>备件包（首年） / Spare Parts Kit (Year 1)</td><td style="text-align:right;">${formatMoney(sparePartsPrice)}</td><td>易损件及推荐备件 / Consumables & recommended spares</td></tr>
-        <tr><td style="text-align:center;">7</td><td>技术文件包 / Technical Documentation</td><td style="text-align:right;">${formatMoney(docPackagePrice)}</td><td>含手册、图纸、证书 / Incl. manuals, drawings, certificates</td></tr>
-        <tr><td style="text-align:center;">8</td><td>运输保险 / Freight & Insurance</td><td style="text-align:right;">${formatMoney(shippingPrice)}</td><td>国内运输+一切险 / Domestic freight + all-risk insurance</td></tr>
+        <tr><td style="text-align:center;">4</td><td>验证文件及服务费 / Validation Documentation & Service Fee</td><td style="text-align:right;">${formatMoney(validationDocServicePrice)}</td><td>★V2.1必含：文件编制(DQ/IQ/OQ/PQ+VMP+SOP+CSV)+现场执行(IQ/OQ/PQ+过滤器完整性+泄漏测试) / Mandatory: docs + on-site execution</td></tr>`;
+
+  if (sterValidationCheck.include) {
+    html += `<tr><td style="text-align:center;">5</td><td>灭菌验证费（可选）/ Sterilization Validation Fee (Optional)</td><td style="text-align:right;">${formatMoney(sterilizationValidationPrice)}</td><td>★V2.1可选：URS提及灭菌验证时加入。SAT阶段BI/CI+半周期/全周期 / URS-triggered. SAT BI/CI + half/full cycle</td></tr>`;
+  }
+
+  html += `
+        <tr><td style="text-align:center;">${sterValidationCheck.include ? 6 : 5}</td><td>培训服务 / Training Services</td><td style="text-align:right;">${formatMoney(trainingPrice)}</td><td>操作+维护培训，3天 / Operation & maintenance training, 3 days</td></tr>
+        <tr><td style="text-align:center;">${sterValidationCheck.include ? 7 : 6}</td><td>备件包（首年） / Spare Parts Kit (Year 1)</td><td style="text-align:right;">${formatMoney(sparePartsPrice)}</td><td>易损件及推荐备件 / Consumables & recommended spares</td></tr>
+        <tr><td style="text-align:center;">${sterValidationCheck.include ? 8 : 7}</td><td>技术文件包 / Technical Documentation</td><td style="text-align:right;">${formatMoney(docPackagePrice)}</td><td>含手册、图纸、证书 / Incl. manuals, drawings, certificates</td></tr>
+        <tr><td style="text-align:center;">${sterValidationCheck.include ? 9 : 8}</td><td>运输保险 / Freight & Insurance</td><td style="text-align:right;">${formatMoney(shippingPrice)}</td><td>国内运输+一切险 / Domestic freight + all-risk insurance</td></tr>
         <tr class="total-row"><td></td><td>合计总价 / TOTAL PRICE</td><td style="text-align:right;">${formatMoney(totalPrice)}</td><td>含增值税 / VAT included</td></tr>
       </tbody>
     </table></div>
@@ -2202,7 +2988,10 @@ function renderQuote(equipTypes, customer, project, supplier, date, regulations)
     techSpecs: techSpecs, configList: stdConfig,
     prices: {
       basePrice: basePrice, vhpPrice: vhpPrice, installPrice: installPrice,
-      validationPrice: validationPrice, trainingPrice: trainingPrice,
+      validationDocServicePrice: validationDocServicePrice,
+      sterilizationValidationPrice: sterilizationValidationPrice,
+      sterValidationIncluded: sterValidationCheck.include,
+      trainingPrice: trainingPrice,
       sparePartsPrice: sparePartsPrice, docPackagePrice: docPackagePrice,
       shippingPrice: shippingPrice, totalPrice: totalPrice
     },
@@ -2218,7 +3007,8 @@ function getEquipmentOverview(type) {
     sterile: '[CN] 单体无菌隔离器是一种基于正压气流屏障原理的密闭操作设备，用于无菌制剂的无菌分装、无菌检测、称量等操作。工作区维持相对背景环境+10~+50Pa正压差，配合HEPA过滤器实现ISO 5级洁净环境。设备集VHP灭菌、手套完整性监测、RTP物料传递等关键功能于一体，满足中国GMP附录1及EU GMP Annex 1对无菌隔离操作的技术要求。<br/><br/>[EN] The Sterile Isolator is a sealed barrier system based on positive pressure airflow principles, designed for aseptic filling, sterility testing, and weighing of sterile pharmaceutical products. The work zone maintains +10 to +50Pa positive differential pressure relative to the background environment, achieving ISO 5 cleanliness via HEPA filtration. The system integrates VHP sterilization, glove integrity monitoring, and RTP material transfer, fully compliant with China GMP Annex 1 and EU GMP Annex 1 requirements for aseptic isolator operations.',
     vhp: '[CN] VHP传递窗是一种基于汽化过氧化氢（VHP）灭菌原理的物料传递设备，用于洁净区与非洁净区之间的物料、工具灭菌传递。设备采用双门互锁安全设计，配置集成式VHP发生器，灭菌循环可编程控制（除湿→灭菌→排残→通风），灭菌效果达SAL 10⁻⁶。残气催化分解后H₂O₂残留<1ppm。<br/><br/>[EN] The VHP Pass-Through Chamber is a material transfer device based on vaporized hydrogen peroxide sterilization, designed for sterile transfer of materials and tools between classified and unclassified areas. The unit features double-door interlock safety design with an integrated VHP generator. Sterilization cycles are fully programmable (dehumidification → sterilization → aeration → ventilation), achieving SAL 10⁻⁶. Residual H₂O₂ is catalytically decomposed to <1ppm.',
     integrated: '[CN] 整线隔离器是一种多工位联动无菌隔离系统，将灌装、轧盖、称重等关键工位集成于同一隔离屏障内。中央PLC/SCADA统一控制各工位时序联动，传送系统贯穿全线。支持全线VHP一体化灭菌或分区独立灭菌，集成环境监测及EBR电子批记录接口，满足大规模无菌制剂连续化生产需求。<br/><br/>[EN] The Integrated Line Isolator is a multi-station linked aseptic barrier system that integrates filling, capping, and weighing stations within a single isolation envelope. Central PLC/SCADA provides synchronized control of all stations with a continuous conveyor system. Supports whole-line integrated VHP sterilization or zoned independent sterilization, with integrated environmental monitoring and EBR interface for large-scale aseptic continuous manufacturing.',
-    negative: '[CN] 单体负压隔离器是一种基于负压气流屏障原理的密闭防护设备，用于有毒/高活性药品（HPAPI、抗肿瘤药物等）的生产操作防护。工作区维持-10~-50Pa负压差，双重HEPA排风过滤确保有毒物质零外泄，OEL控制可达<1μg/m³。配备BIBO过滤器安全更换、气闸缓冲、WIP在线清洗及毒性残留监测功能。<br/><br/>[EN] The Negative Pressure Isolator is a containment barrier system based on negative pressure airflow principles, designed for safe handling of potent/toxic pharmaceutical products (HPAPI, cytotoxic drugs, etc.). The work zone maintains -10 to -50Pa negative differential pressure with dual HEPA exhaust filtration to ensure zero toxic release. OEL control achieves <1μg/m³. Features BIBO safe filter change, airlock buffer, WIP cleaning, and toxic residue monitoring.'
+    negative: '[CN] 非无菌负压隔离器是一种纯防护负压密闭设备，用于高毒/高活性药品（HPAPI、抗肿瘤原料药等）的称量、粉碎、分装等操作防护。工作区维持-10~-50Pa负压差，不要求内部无菌环境，不配置VHP灭菌系统。双重HEPA排风过滤确保有毒物质零外泄，OEL控制可达<0.01μg/m³。排风采用PUSH-PUSH过滤器（袋进袋出式），BIBO安全更换系统暂未配置（需定制）。★V2.1：与sterile_negative的本质区别——negative仅毒防护不要求无菌，sterile_negative毒+无菌双重需求。<br/><br/>[EN] The Non-Sterile Negative Pressure Isolator is a containment-only barrier system for handling potent/toxic pharmaceutical products (HPAPI, cytotoxic APIs, etc.) during weighing, milling, and dispensing. The work zone maintains -10 to -50Pa negative pressure without requiring internal sterility; no VHP sterilization system is configured. Dual HEPA exhaust filtration ensures zero toxic release with OEL control down to <0.01μg/m³. Exhaust uses PUSH-PUSH filters (bag-in bag-out); BIBO safe-change system not yet configured (requires customization). ★V2.1: Fundamental difference from sterile_negative — negative = containment only (no sterility required); sterile_negative = containment + sterility (dual requirement).',
+    sterile_negative: '[CN] 无菌负压隔离器是一种"内部正压维持无菌+整体负压防护高毒"双重设计的密闭操作设备。★V2.1使用场景：带活性或毒性的药品需要在无菌环境下进行操作，包括但不限于灌装、分装、称量等。内部工作区维持+10~+30Pa正压确保ISO 5洁净度，舱体外部整体维持-30~-10Pa负压防止高毒物料外溢。配置VHP灭菌系统维持无菌环境，双重HEPA排风过滤+BIBO安全更换系统确保毒物零外泄，OEL控制可达<0.01μg/m³。典型应用：高活性无菌原料药的无菌分装/称量、细胞毒性药物的无菌配制、抗肿瘤药无菌灌装等"高毒且需无菌"场景。<br/><br/>[EN] The Sterile Negative Pressure Isolator is a dual-design barrier system combining "internal positive pressure for sterility + overall negative pressure for containment." ★V2.1 Use Case: Potent or toxic pharmaceutical products requiring aseptic operations including but not limited to filling, dispensing, and weighing. The internal work zone maintains +10 to +30Pa positive pressure for ISO 5 cleanliness, while the overall enclosure maintains -30 to -10Pa negative pressure to prevent toxic material release. VHP sterilization system maintains sterility; dual HEPA exhaust filtration with BIBO safe-change ensures zero toxic release with OEL control down to <0.01μg/m³. Typical applications: aseptic dispensing/weighing of potent sterile APIs, sterile preparation of cytotoxic drugs, aseptic filling of antineoplastic products.'
   };
   return overviews[type] || overviews.sterile;
 }
@@ -2228,7 +3018,8 @@ function getSystemDescription(type) {
     sterile: '[CN] 工作原理：变频送风机将经HEPA过滤的洁净空气送入工作区，形成垂直单向流，通过压差传感器实时监测与PLC自动调节，维持工作区相对背景环境+10~+50Pa正压差。VHP灭菌时，35% H₂O₂溶液汽化后注入密闭舱体实现表面灭菌，完成后催化分解残气。操作人员通过手套进行密闭操作，物料经RTP端口或传递窗无菌传递。<br/><br/>[EN] Operating Principle: A VFD-controlled supply fan delivers HEPA-filtered clean air to the work zone, creating vertical unidirectional flow. Differential pressure sensors provide real-time monitoring with PLC auto-adjustment to maintain +10 to +50Pa relative to background. During VHP sterilization, 35% H₂O₂ solution is vaporized and injected into the sealed chamber for surface decontamination; residual vapor is catalytically decomposed post-cycle. Operators work through glove ports; materials are transferred aseptically via RTP ports or pass-through chambers.',
     vhp: '[CN] 工作原理：VHP传递窗由两个互锁舱室组成，操作时仅一侧门可开启。物料放入后关闭舱门，启动VHP灭菌循环（除湿→灭菌→排残→通风），H₂O₂浓度、温度、时间可编程设定。灭菌完成后催化分解残气至安全浓度，方可开启对侧舱门取出物料。双门互锁确保两侧门不得同时开启，防止交叉污染。<br/><br/>[EN] Operating Principle: The VHP pass-through chamber consists of two interlocked compartments; only one door may be opened at a time. After loading materials and closing the door, the VHP sterilization cycle initiates (dehumidification → sterilization → aeration → ventilation) with programmable H₂O₂ concentration, temperature, and time. Upon cycle completion, residual vapor is decomposed to safe levels before the opposite door can be opened. Double-door interlock prevents simultaneous opening and cross-contamination.',
     integrated: '[CN] 工作原理：整线隔离器将灌装、轧盖、称重工位集成为一体式隔离屏障，各工位间通过洁净传送系统连接。中央PLC/SCADA统一控制全线设备时序联动，实现自动灌装→自动轧盖→在线称重→剔废的连续化生产。全线可执行一体化或分区VHP灭菌。工位间设缓冲区维持压力梯度和气流方向，集成环境监测系统实时监控关键区洁净参数。<br/><br/>[EN] Operating Principle: The integrated line isolator combines filling, capping, and weighing stations within a single barrier system connected by a clean-grade conveyor. Central PLC/SCADA provides synchronized timing for automated filling → capping → in-line weighing → rejection. Whole-line or zoned VHP sterilization is supported. Buffer zones between stations maintain pressure gradients and airflow direction. Integrated environmental monitoring provides real-time critical zone surveillance.',
-    negative: '[CN] 工作原理：变频排风机将工作区空气经双重HEPA过滤后排出，形成相对背景环境-10~-50Pa负压差，确保有毒物质不外泄。BIBO装置实现过滤器安全更换，操作人员无需接触污染过滤器。进出料经气闸缓冲舱进行，防止开舱时有毒物质逸出。WIP在线清洗系统自动冲洗舱体内壁，清洗废水密闭收集处理。毒性残留监测仪实时监控排风口浓度。<br/><br/>[EN] Operating Principle: A VFD-controlled exhaust fan draws work zone air through dual HEPA filtration, creating -10 to -50Pa negative pressure differential to contain toxic substances. BIBO devices enable safe filter changes without operator exposure. Material ingress/egress through airlock buffer chambers prevents toxic release during door opening. The WIP system automatically flushes internal surfaces with closed-circuit wastewater collection. Toxic residue monitors provide real-time exhaust concentration monitoring.'
+    negative: '[CN] 工作原理：变频排风机将工作区空气经双重HEPA过滤后排出，形成相对背景环境-10~-50Pa负压差，确保有毒物质不外泄。排风采用PUSH-PUSH过滤器（袋进袋出式），BIBO安全更换系统暂未配置（需定制）。进出料经气闸缓冲舱进行，防止开舱时有毒物质逸出。WIP在线清洗系统自动冲洗舱体内壁，清洗废水密闭收集处理。毒性残留监测仪实时监控排风口浓度。不配置VHP灭菌系统（纯防护用途，不要求内部无菌）。<br/><br/>[EN] Operating Principle: A VFD-controlled exhaust fan draws work zone air through dual HEPA filtration, creating -10 to -50Pa negative pressure differential to contain toxic substances. Exhaust uses PUSH-PUSH filters (bag-in bag-out); BIBO safe-change system not yet configured (requires customization). Material ingress/egress through airlock buffer chambers prevents toxic release during door opening. The WIP system automatically flushes internal surfaces with closed-circuit wastewater collection. Toxic residue monitors provide real-time exhaust concentration monitoring. No VHP sterilization system (containment-only, no sterility required).',
+    sterile_negative: '[CN] 工作原理：采用"内部正压维持无菌+整体负压防护高毒"双重设计。内部工作区由变频送风机将HEPA过滤的洁净空气送入，维持+10~+30Pa正压确保ISO 5洁净度。舱体外部整体由变频排风机经双重HEPA过滤后排出，维持-30~-10Pa负压防止高毒物料外溢。VHP灭菌系统维持内部无菌环境（35% H₂O₂汽化注入密闭舱体表面灭菌，完成后催化分解残气）。排风PUSH-PUSH过滤器配合BIBO安全更换系统，因处理带活性或毒性药品，排风过滤器需BIBO安全更换。操作人员通过手套进行密闭操作，物料经RTP端口无菌密闭传递。★V2.1使用场景：带活性或毒性的药品需要在无菌环境下进行操作（灌装/分装/称量等）。<br/><br/>[EN] Operating Principle: Dual-design combining "internal positive pressure for sterility + overall negative pressure for containment." Internal work zone: VFD-controlled supply fan delivers HEPA-filtered clean air maintaining +10 to +30Pa positive pressure for ISO 5 cleanliness. Overall enclosure: VFD-controlled exhaust fan draws air through dual HEPA filtration maintaining -30 to -10Pa negative pressure to prevent toxic release. VHP sterilization system maintains internal sterility (35% H₂O₂ vaporized into sealed chamber for surface decontamination, residual catalytically decomposed). Exhaust PUSH-PUSH filters with BIBO safe-change system — required because processed potent/toxic materials may contaminate exhaust filters. Operators work through glove ports; materials transferred aseptically via RTP ports. ★V2.1 Use Case: Potent or toxic products requiring aseptic operations (filling/dispensing/weighing).'
   };
   return descriptions[type] || descriptions.sterile;
 }
@@ -2303,15 +3094,35 @@ function getTechSpecs(type) {
     negative: [
       { name: '工作区尺寸 / Work Zone Dim.', standard: 'L1200×D800×H900mm' },
       { name: '压力范围 / Pressure Range', standard: '-10~-50Pa' },
-      { name: 'OEL控制目标 / OEL Target', standard: '<1μg/m³' },
+      { name: 'OEL控制目标 / OEL Target', standard: '<0.01μg/m³' },
       { name: '排风HEPA / Exhaust HEPA', standard: '双重HEPA≥99.995% MPPS / Dual HEPA ≥99.995% MPPS' },
-      { name: 'BIBO更换 / BIBO System', standard: '标配 / Standard' },
+      { name: 'BIBO更换 / BIBO System', standard: '暂未配置（需定制）/ Not configured (requires customization)' },
+      { name: '过滤器配置 / Filter Config', standard: '新风桶式+排风PUSH-PUSH（H14）/ Supply cartridge + Exhaust PUSH-PUSH (H14)' },
       { name: '气闸缓冲 / Airlock Buffer', standard: '单气闸 / Single airlock' },
       { name: 'WIP清洗 / WIP Cleaning', standard: '手动WIP喷球 / Manual WIP spray ball' },
       { name: '毒性监测 / Toxic Monitoring', standard: '预留监测口 / Monitoring port reserved' },
       { name: '手套数量 / Glove Quantity', standard: '4只 / 4 gloves' },
       { name: '内壁材质 / Interior Material', standard: '316L不锈钢 Ra≤0.4μm / 316L SS, Ra≤0.4μm' },
+      { name: 'UPS备电 / UPS (Standard)', standard: '在线双变换≥30min / Online double conversion ≥30min' },
       { name: '紧急排风 / Emergency Exhaust', standard: '备用排风机 / Backup exhaust fan' },
+      { name: '控制系统 / Control System', standard: 'PLC+10寸HMI / PLC + 10" HMI' }
+    ],
+    sterile_negative: [
+      { name: '工作区尺寸 / Work Zone Dim.', standard: 'L1200×D800×H900mm' },
+      { name: '内部正压 / Internal Positive Pressure', standard: '+10~+30Pa（维持ISO 5）/+10~+30Pa (maintain ISO 5)' },
+      { name: '整体负压 / Overall Negative Pressure', standard: '-30~-10Pa（防护高毒物料）/-30~-10Pa (containment)' },
+      { name: '洁净等级(静态) / Cleanliness (Static)', standard: 'ISO 5级 (Class 100) — 内部正压区' },
+      { name: 'OEL控制目标 / OEL Target', standard: '<0.01μg/m³（OEB5/6级）/ <0.01μg/m³ (OEB 5/6)' },
+      { name: 'VHP灭菌效果 / VHP Sterilization', standard: 'SAL 10⁻⁶（维持无菌环境）/ SAL 10⁻⁶' },
+      { name: '排风HEPA / Exhaust HEPA', standard: '双重HEPA≥99.995% MPPS + PUSH-PUSH / Dual HEPA + PUSH-PUSH' },
+      { name: 'BIBO更换 / BIBO System', standard: '标配（排风PUSH-PUSH+BIBO）/ Standard (exhaust PUSH-PUSH + BIBO)' },
+      { name: '过滤器配置 / Filter Config', standard: '新风桶式+排风PUSH-PUSH+BIBO（H14）/ Supply cartridge + Exhaust PUSH-PUSH+BIBO (H14)' },
+      { name: '气流型式 / Airflow Pattern', standard: '内部垂直单向流+整体负压 / Internal vertical unidirectional + overall negative' },
+      { name: '截面风速 / Face Velocity', standard: '0.36~0.54m/s（内部正压区）/ 0.36~0.54m/s' },
+      { name: '手套数量 / Glove Quantity', standard: '4只 / 4 gloves' },
+      { name: '内壁材质 / Interior Material', standard: '316L不锈钢 Ra≤0.4μm / 316L SS, Ra≤0.4μm' },
+      { name: 'UPS备电 / UPS (Standard)', standard: '在线双变换≥30min（优先维持排风）/ Online double conversion ≥30min' },
+      { name: '紧急排风 / Emergency Exhaust', standard: '备用排风机+紧急排风经PUSH-PUSH+BIBO / Backup fan + emergency via PUSH-PUSH+BIBO' },
       { name: '控制系统 / Control System', standard: 'PLC+10寸HMI / PLC + 10" HMI' }
     ]
   };
@@ -2374,20 +3185,43 @@ function getStandardConfig(type) {
     ],
     negative: [
       { name: '负压隔离器舱体', spec: '316L不锈钢焊接舱体，Ra≤0.4μm，加强气密设计', qty: '1', unit: '套', remark: '含视窗、照明' },
-      { name: '排风系统', spec: '变频排风机+双重HEPA(≥99.995%)', qty: '1', unit: '套', remark: '含备用排风机' },
-      { name: 'BIBO更换装置', spec: '袋进袋出安全更换排风HEPA', qty: '1', unit: '套', remark: '' },
+      { name: '排风系统', spec: '变频排风机+双重HEPA(≥99.995%)，新风桶式+排风PUSH-PUSH过滤器', qty: '1', unit: '套', remark: '含备用排风机' },
+      { name: 'BIBO更换装置', spec: '排风PUSH-PUSH过滤器（袋进袋出式），BIBO安全更换系统暂未配置（需定制）', qty: '1', unit: '套', remark: 'BIBO需定制评估' },
       { name: '气闸缓冲舱', spec: '单气闸，压差梯度控制', qty: '1', unit: '套', remark: '' },
       { name: 'WIP在线清洗', spec: '手动WIP喷球+收集槽', qty: '1', unit: '套', remark: '' },
       { name: '手套系统', spec: 'ISO 14644-7标准手套及接口', qty: '4', unit: '只', remark: '' },
       { name: '压差监测', spec: '负压传感器+数字显示+报警', qty: '1', unit: '套', remark: '' },
       { name: '毒性监测口', spec: '排风口预留毒性物质监测接口', qty: '1', unit: '个', remark: '' },
+      { name: 'UPS不间断电源', spec: '在线双变换UPS，续航≥30min（标配），优先维持排风', qty: '1', unit: '套', remark: '标配配置' },
       { name: 'HMI系统', spec: '10寸工业触摸屏+PLC', qty: '1', unit: '套', remark: '' },
       { name: '报警系统', spec: '负压异常/VHP泄漏/过滤器堵塞报警', qty: '1', unit: '套', remark: '' },
+      { name: '紧急排风系统', spec: '紧急排风（排风量≥正常2倍），经PUSH-PUSH过滤器排放', qty: '1', unit: '套', remark: '' },
       { name: '门系统', spec: '气密门+安全联锁+气闸互锁', qty: '3', unit: '扇', remark: '' },
       { name: '不锈钢工作台', spec: '316L不锈钢，可拆卸清洗', qty: '1', unit: '件', remark: '' },
       { name: '清洗废液收集', spec: '密闭收集罐+排液阀', qty: '1', unit: '套', remark: '' },
       { name: '公用工程接口', spec: '电源、压缩空气、纯化水接口', qty: '1', unit: '套', remark: '' },
-      { name: '文件包', spec: '操作手册、图纸、验证方案、OEL评估报告', qty: '1', unit: '套', remark: '' }
+      { name: '文件包', spec: '操作手册、图纸、验证方案、OEL评估报告', qty: '1', unit: '套', remark: '无VHP灭菌系统' }
+    ],
+    sterile_negative: [
+      { name: '无菌负压隔离器舱体', spec: '316L不锈钢焊接舱体，Ra≤0.4μm，双重气密设计（正压+负压）', qty: '1', unit: '套', remark: '含视窗、照明' },
+      { name: '送风系统（正压侧）', spec: '变频送风机+桶式过滤器（cartridge filter，H14级≥99.995%）', qty: '1', unit: '套', remark: '维持内部正压ISO 5' },
+      { name: '排风系统（负压侧）', spec: '变频排风机+双重HEPA+排风PUSH-PUSH过滤器（袋进袋出式，H14级）', qty: '1', unit: '套', remark: '含备用排风机' },
+      { name: 'BIBO安全更换系统', spec: '排风PUSH-PUSH过滤器+BIBO安全更换系统（PVC袋+热封夹），标配', qty: '1', unit: '套', remark: '标配配置' },
+      { name: 'VHP灭菌系统', spec: '集成式VHP发生器，35% H₂O₂，浓度200-1500ppm可调，灭菌效果SAL10⁻⁶', qty: '1', unit: '套', remark: '维持无菌环境' },
+      { name: '催化分解器', spec: 'VHP残气催化分解，出口<1ppm', qty: '1', unit: '套', remark: '' },
+      { name: '无菌手套', spec: 'ISO 14644-7标准手套及接口', qty: '4', unit: '只', remark: '含备用手套' },
+      { name: 'RTP快速转移端口', spec: 'α-β对接密封系统（按需配置）', qty: '1', unit: '套', remark: '按需配置' },
+      { name: 'HMI人机界面', spec: '10寸工业触摸屏+PLC', qty: '1', unit: '套', remark: '' },
+      { name: '压差监测系统', spec: '内部正压传感器+整体负压传感器+数字显示+报警', qty: '1', unit: '套', remark: '双压差监测' },
+      { name: 'UPS不间断电源', spec: '在线双变换UPS，续航≥30min（标配），优先维持排风+负压保持', qty: '1', unit: '套', remark: '标配配置' },
+      { name: '紧急排风系统', spec: '紧急排风（排风量≥正常2倍），经PUSH-PUSH+BIBO过滤器排放', qty: '1', unit: '套', remark: '' },
+      { name: '报警系统', spec: '正压异常/负压异常/VHP泄漏/过滤器堵塞报警', qty: '1', unit: '套', remark: '' },
+      { name: '毒性监测口', spec: '排风口预留毒性物质监测接口', qty: '1', unit: '个', remark: '' },
+      { name: '环境监测接口', spec: '活性粒子+非活性粒子采样口', qty: '4', unit: '个', remark: '' },
+      { name: '门系统', spec: '气密门+安全联锁+气闸互锁', qty: '3', unit: '扇', remark: '' },
+      { name: '电气控制系统', spec: 'PLC+I/O模块+断路器+接线端子', qty: '1', unit: '套', remark: '含控制柜' },
+      { name: '公用工程接口', spec: '电源、压缩空气、VHP管路、纯化水接口', qty: '1', unit: '套', remark: '' },
+      { name: '文件包', spec: '操作手册、图纸、验证方案、OEL评估报告、BIBO更换SOP', qty: '1', unit: '套', remark: '' }
     ]
   };
   return configs[type] || configs.sterile;
@@ -2830,26 +3664,46 @@ function buildConfigDocxTable(data) {
 
 // ---- Helper: Price DOCX Table ----
 function buildPriceDocxTable(data) {
-  var totalUSD = data.prices ? (data.prices.totalUSD || 0) : 0;
-  var unitUSD = data.prices ? (data.prices.unitUSD || 0) : 0;
-  var qty = data.prices ? (data.prices.quantity || 1) : 1;
+  var prices = data.prices || {};
+  var totalUSD = prices.totalPrice || 0;
+  var baseUSD = prices.basePrice || 0;
+  var sterIncluded = prices.sterValidationIncluded || false;
+  var sterValPrice = prices.sterilizationValidationPrice || 0;
+  var valDocPrice = prices.validationDocServicePrice || 0;
 
-  var row = function(label, value) {
+  var row = function(label, value, isBold) {
     return new docx.TableRow({
       children: [
-        makeDocxCell(label, 3500, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
-        makeDocxCell(value, 5500, { align: docx.AlignmentType.LEFT })
+        makeDocxCell(label, 5000, { bold: true, shading: "f4f7fc", align: docx.AlignmentType.RIGHT }),
+        makeDocxCell(value, 4000, { align: docx.AlignmentType.LEFT, bold: !!isBold })
       ]
     });
   };
 
+  var rows = [
+    row("\u8bbe\u5907\u672c\u4f53 / Isolator Main Unit", "USD " + baseUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })),
+    row("\u5b89\u88c5\u8c03\u8bd5 / Installation & Commissioning", "USD " + (prices.installPrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })),
+    row("\u9a8c\u8bc1\u6587\u4ef6\u53ca\u670d\u52a1\u8d39 / Validation Doc & Service Fee", "USD " + valDocPrice.toLocaleString("en-US", { minimumFractionDigits: 2 }))
+  ];
+
+  if (sterIncluded) {
+    rows.push(row("灭菌验证费（可选）/ Sterilization Validation Fee (Optional)", "USD " + sterValPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })));
+  }
+
+  rows.push(row("\u57f9\u8bad\u670d\u52a1 / Training Services", "USD " + (prices.trainingPrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })));
+  rows.push(row("\u5907\u4ef6\u5305\uff08\u9996\u5e74\uff09/ Spare Parts Kit (Year 1)", "USD " + (prices.sparePartsPrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })));
+  rows.push(row("\u6280\u672f\u6587\u4ef6\u5305 / Technical Documentation", "USD " + (prices.docPackagePrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })));
+  rows.push(row("\u8fd0\u8f93\u4fdd\u9669 / Freight & Insurance", "USD " + (prices.shippingPrice || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })));
+  rows.push(new docx.TableRow({
+    children: [
+      makeDocxCell("\u5408\u8ba1\u603b\u4ef7 / TOTAL PRICE", 5000, { bold: true, shading: DOCX.COLORS.accentGold, color: "FFFFFF", align: docx.AlignmentType.RIGHT }),
+      makeDocxCell("USD " + totalUSD.toLocaleString("en-US", { minimumFractionDigits: 2 }) + " (VAT included)", 4000, { bold: true, shading: DOCX.COLORS.accentGold, color: "FFFFFF" })
+    ]
+  }));
+
   return new docx.Table({
     width: { size: 100, type: docx.WidthType.PERCENTAGE },
-    rows: [
-      row("\u5355\u4ef7 / Unit Price", "USD " + unitUSD.toLocaleString("en-US", { minimumFractionDigits: 2 })),
-      row("\u6570\u91cf / Quantity", String(qty) + " set" + (qty > 1 ? "s" : "")),
-      row("\u603b\u4ef7 / Total Price", "USD " + totalUSD.toLocaleString("en-US", { minimumFractionDigits: 2 }))
-    ]
+    rows: rows
   });
 }
 
@@ -3287,18 +4141,26 @@ function saveAsQuotation() {
   const quoteNo = generateQuoteNo();
   const equipNames = equipTypes.map(function(t) { return EQUIP_TYPES[t].name; }).join(' / ');
 
-  // Calculate total price (USD, single standard configuration)
+  // Calculate total price (USD, V2.1 two-fee validation structure)
   const primaryType = equipTypes[0];
   const priceRange = PRICE_RANGES[primaryType];
   const basePrice = roundToTenThousand(randomInRange(priceRange[0], priceRange[1]));
   const vhpPrice = primaryType === 'vhp' ? 0 : roundToTenThousand(basePrice * 0.15);
   const installPrice = roundToTenThousand(basePrice * 0.06);
-  const validationPrice = roundToTenThousand(basePrice * 0.07);
+  const validationDocServicePrice = roundToTenThousand(basePrice * 0.07);
   const trainingPrice = roundToTenThousand(basePrice * 0.02);
   const sparePartsPrice = roundToTenThousand(basePrice * 0.03);
   const docPackagePrice = roundToTenThousand(basePrice * 0.02);
   const shippingPrice = roundToTenThousand(basePrice * 0.03);
-  const totalPrice = basePrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationPrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+
+  // V2.1 §8.7: Sterilization validation fee (optional, URS-triggered)
+  const sterValidationCheck = shouldIncludeSterilizationValidationFee(primaryType, ursText || '');
+  const sterilizationValidationPrice = sterValidationCheck.include ? roundToTenThousand(basePrice * 0.03) : 0;
+
+  let totalPrice = basePrice + (primaryType !== 'vhp' ? vhpPrice : 0) + installPrice + validationDocServicePrice + trainingPrice + sparePartsPrice + docPackagePrice + shippingPrice;
+  if (sterValidationCheck.include) {
+    totalPrice += sterilizationValidationPrice;
+  }
 
   const quotation = {
     quoteNo: quoteNo,
