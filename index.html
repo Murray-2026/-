@@ -1002,8 +1002,9 @@ function parseURS() {
     state.parsedParams = params;
     renderParamAdjust(params);
 
-    // 3. Split URS items
-    const items = splitURSItems(text);
+    // 3. Split URS items（拆分条款 + 合并中英文同义条目）
+    const rawItems = splitURSItems(text);
+    const items = mergeBilingualItems(rawItems);
     state.parsedRequirements = items;
 
     // 4. Build parse result preview
@@ -1153,6 +1154,8 @@ const AI_SYSTEM_PROMPT = `你是医药隔离器售前技术专家。请分析用
 
 注意：sterile_negative=毒+无菌（双重需求），negative=仅毒防护（不要求无菌）。同时命中两类时优先归sterile_negative。
 
+重要：如果URS中同一条需求同时出现中文和英文版本，请合并为一条需求条目，text字段同时包含中英文（先中文一行，换行后"English: "+英文原文），不要返回重复条目。例如"URS-001 工作区尺寸1500mm"和"URS-001 Working area 1500mm"应合并为一条。
+
 请确保返回纯JSON，不要包含markdown代码块标记。`;
 
 async function parseURSWithAI() {
@@ -1264,8 +1267,30 @@ async function parseURSWithAI() {
     state.parsedParams = params;
     renderParamAdjust(params);
 
-    // 转换AI需求格式到现有格式
-    const items = aiRequirements.map((req, idx) => ({
+    // 转换AI需求格式到现有格式，并合并中英文重复条目
+    const mergedAiReqs = [];
+    for (let i = 0; i < aiRequirements.length; i++) {
+      const cur = aiRequirements[i];
+      const next = aiRequirements[i + 1];
+      if (next && isBilingualPair({ text: cur.text || '' }, { text: next.text || '' })) {
+        // 合并中英文
+        const isCurCN = getChineseRatio(cur.text || '') >= getEnglishRatio(cur.text || '');
+        const cnText = isCurCN ? (cur.text || '') : (next.text || '');
+        const enText = isCurCN ? (next.text || '') : (cur.text || '');
+        mergedAiReqs.push({
+          ...cur,
+          text: cnText + '\nEnglish: ' + enText,
+          id: 'URS-' + String(mergedAiReqs.length + 1).padStart(3, '0')
+        });
+        i++; // 跳过下一条
+      } else {
+        mergedAiReqs.push({
+          ...cur,
+          id: 'URS-' + String(mergedAiReqs.length + 1).padStart(3, '0')
+        });
+      }
+    }
+    const items = mergedAiReqs.map((req, idx) => ({
       id: req.id || 'URS-' + String(idx + 1).padStart(3, '0'),
       text: req.text || '',
       originalLine: req.text || '',
@@ -1388,7 +1413,7 @@ function renderParseResultAI(identifiedTypes, typeScores, params, items, summary
       const respClass = 'ai-response-' + (item.supplierResponse || '满足');
       html += `<tr>
         <td style="font-weight:600; color:var(--primary);">${escapeHtml(item.id)}</td>
-        <td>${escapeHtml(item.text).substring(0, 80)}${item.text.length > 80 ? '...' : ''}</td>
+        <td style="white-space: pre-line;">${escapeHtml(item.text).substring(0, 120).replace(/\nEnglish:\s*/g, '<br><span style="color:#718096;font-size:0.7rem;">English:</span> ')}${item.text.length > 120 ? '...' : ''}</td>
         <td style="font-size:0.68rem; color:#718096;">${escapeHtml(item.category || '其他')}</td>
         <td style="font-size:0.72rem; text-align:center;">${escapeHtml(item.importance || '中')}</td>
         <td class="${respClass}" style="text-align:center;">${escapeHtml(item.supplierResponse || '满足')}</td>
@@ -1603,10 +1628,271 @@ function renderParamAdjust(params) {
   area.innerHTML = html;
 }
 
+// ---- 前言噪音识别 ----
+// 前言关键词集合：命中这些词的章节标题/说明段落应跳过
+const PREAMBLE_KEYWORDS = [
+  '简介','目的','范围','概述','背景','定义','术语','引言','前言','修订','版本','目录','审批','签字','签署',
+  'Introduction','Purpose','Scope','Objective','Background','Definition','Terminology',
+  'References','Abbreviation','Revision','Version','Contents','Approval','Signature','Appendix','Foreword'
+];
+
+/**
+ * 判断某行是否属于"非正文条款的前言噪音"，返回 true 表示应跳过。
+ * 仅判断"纯前言行"（标题行、文档元信息行），不负责跳过模式状态。
+ */
+function isPreambleSection(line) {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+
+  // 1. 文档元信息行：版本号、修订记录、目录、审批签名、文档编号
+  if (/版本\s*[Vv]?\d|Version\s*\d|修订记录|修订历史|Revision\s*History|目录|Contents|审批|签字|签署|Approval|Signature|文档编号|Document\s*No|Doc\s*No/i.test(trimmed)) {
+    return true;
+  }
+
+  // 2. 纯标题行（整行就是标题，无实质需求内容）
+  const pureTitlePatterns = [
+    /^用户需求规格说明书/,
+    /^用户需求说明/,
+    /^需求规格说明书/,
+    /^User Requirement Specification$/i,
+    /^URS$/,
+    /^附录/,
+    /^Appendix/i,
+    /^第[一二三四五六七八九十百]+章/,
+    /^Chapter\s+\d+/i
+  ];
+  for (const pat of pureTitlePatterns) {
+    if (pat.test(trimmed)) return true;
+  }
+
+  // 3. 编号+前言词的纯章节标题（如 "1. 简介"、"2. 目的"、"1.1 概述"）
+  //    去掉行首编号前缀后检查是否只剩前言关键词
+  const afterNum = trimmed
+    .replace(/^(\d+\.)*\d+[.、)\s]+/, '')
+    .replace(/^第[一二三四五六七八九十百\d]+[章节条][、.\s]*/, '')
+    .replace(/^[（(]\s*\d+\s*[)）]\s*/, '')
+    .trim();
+  if (afterNum.length > 0 && afterNum.length <= 20) {
+    const cleanAfter = afterNum.replace(/[：:]\s*$/, '').trim();
+    for (const kw of PREAMBLE_KEYWORDS) {
+      // 完全匹配或包含匹配（短行）
+      if (cleanAfter === kw || cleanAfter.toLowerCase() === kw.toLowerCase()) return true;
+      if (cleanAfter.includes(kw) && cleanAfter.length <= 15) return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * 判断编号后内容是否为前言标题词（如 "简介"、"目的"）。
+ * 用于编号行匹配后二次检查：编号虽匹配但内容是前言 → 跳过。
+ */
+function isPreambleHeading(text) {
+  if (!text) return false;
+  const t = text.trim().replace(/[：:]\s*$/, '').trim();
+  if (t.length === 0 || t.length > 20) return false;
+  for (const kw of PREAMBLE_KEYWORDS) {
+    if (t === kw || t.toLowerCase() === kw.toLowerCase()) return true;
+    if (t.includes(kw) && t.length <= 15) return true;
+  }
+  return false;
+}
+
+/**
+ * 判断是否为纯短标题（章节标题，非需求内容）。
+ * 如 "3. 交付" 去掉编号后只剩 "交付"（很短，无技术参数，无需求动词）→ 是标题 → 跳过。
+ */
+function isShortHeading(text) {
+  if (!text) return false;
+  const t = text.trim().replace(/[：:]\s*$/, '').trim();
+  if (t.length === 0) return false;
+  // 很短且不含技术参数、不含需求动词 → 纯标题
+  if (t.length <= 8 && !hasTechParams(t) && !isRequirementStatement(t)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 判断是否为需求陈述。
+ * 1. 以需求动词开头（应/须/必须/shall/should/must/may）
+ * 2. 含中文需求动词+动词组合（如"应于""须有""必须具备"，避免误匹配"需求"名词）
+ * 3. 含具体技术参数
+ */
+function isRequirementStatement(text) {
+  const lower = text.toLowerCase().trim();
+  // 以英文需求动词开头
+  if (/^(shall|should|must|may|will)\b/i.test(lower)) return true;
+  // 以中文需求动词开头
+  if (/^(应|应当|应该|须|必须|需|不得|禁止|严禁)/.test(text.trim())) return true;
+  // 含中文需求动词+动词组合（避免匹配"需求"等名词）
+  if (/应[于为有能可满具保提支采使确]|须[为有能满足]|必须[具备有能]|不得[低于超少大于]/.test(text)) return true;
+  // 含技术参数
+  if (hasTechParams(text)) return true;
+  return false;
+}
+
+/**
+ * 判断文本是否含具体技术参数（数字+单位 / 标准代号 / 尺寸表达式）。
+ */
+function hasTechParams(text) {
+  return /\d+(\.\d+)?\s*(mm|pa|μm|ug|μg|lux|db|v|hz|mpa|%|级|类|℃|°c|周|天|日|月|年|小时|分钟|秒)/i.test(text) ||
+         /ISO\s*\d|316L|304|HEPA|VHP|H2O2|OEL|OEB|SAL|DQ|IQ|OQ|PQ|FAT|SAT|GMP|FDA|21\s*CFR/i.test(text) ||
+         /\d+\s*[×xX*]\s*\d+/i.test(text);
+}
+
+// ---- 中英文同义合并 ----
+/**
+ * 计算中文字符占比。
+ */
+function getChineseRatio(text) {
+  if (!text) return 0;
+  const cn = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  return cn / Math.max(text.length, 1);
+}
+
+/**
+ * 计算英文字母占比。
+ */
+function getEnglishRatio(text) {
+  if (!text) return 0;
+  const en = (text.match(/[a-zA-Z]/g) || []).length;
+  return en / Math.max(text.length, 1);
+}
+
+/**
+ * 提取文本中的"数字+单位指纹"集合，用于中英文相似度比对。
+ */
+function extractNumberFingerprint(text) {
+  const matches = text.match(/\d+(\.\d+)?\s*(mm|pa|μm|ug|μg|lux|db|v|hz|mpa|%|级|类|℃|°c)?/gi) || [];
+  return new Set(matches.map(m => m.toLowerCase().replace(/\s+/g, '')));
+}
+
+/**
+ * 计算两个集合的 Jaccard 相似度。
+ */
+function jaccardSimilarity(setA, setB) {
+  if (setA.size === 0 && setB.size === 0) return 1;
+  let intersection = 0;
+  for (const x of setA) {
+    if (setB.has(x)) intersection++;
+  }
+  const union = setA.size + setB.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+/**
+ * 判断两条文本是否共享关键技术术语。
+ */
+function shareTechTerms(a, b) {
+  const terms = ['glove','手套','VHP','ISO','HEPA','316L','304','RTP','OEL','SAL','H2O2',
+    '正压','负压','positive pressure','negative pressure','隔离器','isolator',
+    '洁净','clean','灭菌','sterili','手套箱','传递窗','passbox','pass-through'];
+  const lowerA = a.toLowerCase();
+  const lowerB = b.toLowerCase();
+  for (const t of terms) {
+    if (lowerA.includes(t.toLowerCase()) && lowerB.includes(t.toLowerCase())) return true;
+  }
+  return false;
+}
+
+/**
+ * 判断两条相邻 items 是否为同一条需求的中英文版。
+ */
+function isBilingualPair(a, b) {
+  const aCN = getChineseRatio(a.text);
+  const aEN = getEnglishRatio(a.text);
+  const bCN = getChineseRatio(b.text);
+  const bEN = getEnglishRatio(b.text);
+
+  // 语言主导判断：一中一英
+  const oneCNoneEN = (aCN > 0.3 && bEN > 0.3) || (aEN > 0.3 && bCN > 0.3);
+  if (!oneCNoneEN) return false;
+
+  // 特征指纹相似度判断
+  const fingerprintA = extractNumberFingerprint(a.text);
+  const fingerprintB = extractNumberFingerprint(b.text);
+
+  // 如果两个指纹都为空（无数字参数），不能用 Jaccard 相似度判断（空集相似度无意义）
+  if (fingerprintA.size === 0 && fingerprintB.size === 0) {
+    // 仅当含相同技术术语时才判定为同一条需求的中英文版
+    return shareTechTerms(a.text, b.text);
+  }
+
+  const sim = jaccardSimilarity(fingerprintA, fingerprintB);
+
+  // 相似度 >= 0.4 → 判定为同一条需求的中英文版
+  if (sim >= 0.4) return true;
+
+  // 附加条件：相同技术术语 + 相似度 >= 0.2
+  if (shareTechTerms(a.text, b.text) && sim >= 0.2) return true;
+
+  // 附加条件：编号相同
+  if (a.id && b.id && a.id === b.id) return true;
+
+  return false;
+}
+
+/**
+ * 对 splitURSItems 返回的 items 数组做中英文合并去重。
+ * 合并后生成新 item，text 字段为 "中文原文\nEnglish: 英文原文"。
+ * 同时保留 textCN 和 textEN 两个字段，并重新编号。
+ */
+function mergeBilingualItems(items) {
+  if (!items || items.length === 0) return [];
+  const merged = [];
+  let i = 0;
+  while (i < items.length) {
+    const cur = items[i];
+    const next = items[i + 1];
+
+    if (next && isBilingualPair(cur, next)) {
+      // 合并中英文
+      const isCurCN = getChineseRatio(cur.text) >= getEnglishRatio(cur.text);
+      const cnText = isCurCN ? cur.text : next.text;
+      const enText = isCurCN ? next.text : cur.text;
+      merged.push({
+        id: `URS-${String(merged.length + 1).padStart(3, '0')}`,
+        text: cnText + '\nEnglish: ' + enText,
+        textCN: cnText,
+        textEN: enText,
+        originalLine: cur.originalLine + ' || ' + next.originalLine
+      });
+      i += 2;
+    } else {
+      // 不合并，保留原条目（重新编号）
+      merged.push({
+        ...cur,
+        id: `URS-${String(merged.length + 1).padStart(3, '0')}`
+      });
+      i += 1;
+    }
+  }
+  return merged;
+}
+
+/**
+ * 将合并后的双语文本拆分为 { cn, en } 结构，供 DOCX 导出使用。
+ */
+function splitBilingualText(text) {
+  if (!text) return { cn: '', en: '' };
+  var idx = text.indexOf('\nEnglish: ');
+  if (idx >= 0) {
+    return {
+      cn: text.substring(0, idx).trim(),
+      en: text.substring(idx + '\nEnglish: '.length).trim()
+    };
+  }
+  return { cn: text.trim(), en: '' };
+}
+
 function splitURSItems(text) {
   const lines = text.split('\n').filter(l => l.trim());
   const items = [];
   let counter = 0;
+  let inPreamble = false; // 前言跳过模式标志
+
   const patterns = [
     /^URS[-‐–—]\s*(\d+)/i,
     /^(\d+\.\d+)\s/,
@@ -1614,29 +1900,77 @@ function splitURSItems(text) {
     /^[（(]\s*(\d+)\s*[)）]\s/,
     /^第(\d+)条/
   ];
+
   for (const line of lines) {
+    const trimmed = line.trim();
+
+    // 1. 先用 isPreambleSection 判断纯前言行（标题行、文档元信息行）
+    if (isPreambleSection(trimmed)) {
+      inPreamble = true; // 进入前言章节
+      continue; // 跳过前言行
+    }
+
+    // 2. 检查是否匹配编号模式
     let matched = false;
+    let afterNumText = trimmed;
     for (const pat of patterns) {
-      const m = line.trim().match(pat);
+      const m = trimmed.match(pat);
       if (m) {
-        counter++;
-        items.push({
-          id: `URS-${String(counter).padStart(3, '0')}`,
-          text: line.trim().replace(pat, '').trim(),
-          originalLine: line.trim()
-        });
+        afterNumText = trimmed.replace(pat, '').trim();
         matched = true;
         break;
       }
     }
-    if (!matched && line.trim().length > 4) {
+
+    // 3. 编号行：检查编号后内容
+    if (matched) {
+      // 编号后内容是前言标题词（如 "1. 简介"）→ 跳过，进入前言模式
+      if (isPreambleHeading(afterNumText)) {
+        inPreamble = true;
+        continue;
+      }
+      // 编号后内容是纯短标题（如 "3. 交付"）→ 跳过标题行，退出前言模式
+      if (isShortHeading(afterNumText)) {
+        inPreamble = false;
+        continue;
+      }
+      // 是真正的需求条款
+      inPreamble = false;
       counter++;
       items.push({
         id: `URS-${String(counter).padStart(3, '0')}`,
-        text: line.trim(),
-        originalLine: line.trim()
+        text: afterNumText,
+        originalLine: trimmed
+      });
+      continue;
+    }
+
+    // 4. 无编号行
+    if (inPreamble) {
+      // 前言模式中：只有需求陈述才保留，否则跳过说明文字
+      if (isRequirementStatement(trimmed)) {
+        inPreamble = false;
+        counter++;
+        items.push({
+          id: `URS-${String(counter).padStart(3, '0')}`,
+          text: trimmed,
+          originalLine: trimmed
+        });
+      }
+      // 否则跳过前言说明段落
+      continue;
+    }
+
+    // 5. 无编号行，非前言模式：只有需求陈述特征才识别为条款
+    if (isRequirementStatement(trimmed)) {
+      counter++;
+      items.push({
+        id: `URS-${String(counter).padStart(3, '0')}`,
+        text: trimmed,
+        originalLine: trimmed
       });
     }
+    // 否则跳过（非需求陈述的无编号行）
   }
   return items;
 }
@@ -2599,17 +2933,19 @@ function generateDocs() {
   btn.disabled = true;
 
   setTimeout(() => {
-    // Parse URS items
-    const items = splitURSItems(ursText);
+    // Parse URS items（先拆分条款，再合并中英文同义条目）
+    const rawItems = splitURSItems(ursText);
+    const items = mergeBilingualItems(rawItems);
     // Generate URS replies - use the primary (first) equipment type for response determination
     const primaryEquipType = equipTypes[0];
     const replies = items.map((item, idx) => ({
       id: item.id,
       originalText: item.text,
-      category: classifyRequirement(item.text),
-      supplierResponse: determineResponse(item.text, primaryEquipType),
-      technicalNote: generateTechNote(item.text, primaryEquipType),
-      regulationRef: findRegulationRef(item.text, regulations),
+      // 分类/响应/技术说明/法规匹配优先用中文文本（中文规则匹配能命中）
+      category: classifyRequirement(item.textCN || item.text),
+      supplierResponse: determineResponse(item.textCN || item.text, primaryEquipType),
+      technicalNote: generateTechNote(item.textCN || item.text, primaryEquipType),
+      regulationRef: findRegulationRef(item.textCN || item.text, regulations),
       remark: '',
       isSupplementary: false
     }));
@@ -2676,7 +3012,7 @@ function renderURSReply(replies, customer, project, supplier, date, regulations,
 
     html += `<tr>
       <td style="font-weight:600; color:var(--primary); text-align:center;">${r.id}</td>
-      <td>${r.originalText}</td>
+      <td style="white-space: pre-line;">${escapeHtml(r.originalText).replace(/\nEnglish:\s*/g, '<br><span style="color:#718096;font-size:0.7rem;">English:</span> ')}</td>
       <td style="font-size:0.68rem; color:#718096; text-align:center;">${r.category}</td>
       <td style="text-align:center;"><span class="${tagClass}">${tagText}</span></td>
       <td style="font-size:0.72rem; line-height:1.6;">${r.technicalNote}</td>
@@ -3604,7 +3940,9 @@ function buildURSDocxTable(replies) {
     var rowShading = i % 2 === 0 ? 'ffffff' : 'f8fafc';
     var resp = respMap[r.supplierResponse] || { label: r.supplierResponse || 'N/A', fill: 'e2e8f0', color: '4a5568' };
     var clauseText = r.originalText || '';
+    var clauseParts = splitBilingualText(clauseText);
     var techNote = r.technicalNote || '';
+    var techParts = splitBilingualText(techNote);
     var regRef = r.regulationRef || '';
     var remarkText = r.remark || '';
     if (r.isSupplementary) {
@@ -3614,9 +3952,9 @@ function buildURSDocxTable(replies) {
     rows.push(new docx.TableRow({
       children: [
         makeDocxCell(String(i + 1), 400, { align: docx.AlignmentType.CENTER, shading: rowShading }),
-        makeDocxBilingualCell(clauseText, '', 2200, { shading: rowShading }),
+        makeDocxBilingualCell(clauseParts.cn, clauseParts.en, 2200, { shading: rowShading }),
         makeDocxCell(resp.label, 900, { align: docx.AlignmentType.CENTER, shading: resp.fill, color: resp.color, bold: true, size: 14 }),
-        makeDocxBilingualCell(techNote, '', 2000, { shading: rowShading }),
+        makeDocxBilingualCell(techParts.cn, techParts.en, 2000, { shading: rowShading }),
         makeDocxCell(regRef, 1700, { shading: rowShading }),
         makeDocxCell(remarkText, 1800, { shading: rowShading })
       ]
